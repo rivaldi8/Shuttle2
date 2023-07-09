@@ -17,10 +17,10 @@ import com.simplecityapps.shuttle.ui.common.mvp.BasePresenter
 import com.squareup.inject.assisted.Assisted
 import com.squareup.inject.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 interface AlbumDetailContract {
 
@@ -28,6 +28,7 @@ interface AlbumDetailContract {
         fun setData(songs: List<Song>)
         fun showLoadError(error: Error)
         fun onAddedToQueue(name: String)
+        fun onCurrentSongChanged(songs: List<Song>)
         fun setAlbum(album: com.simplecityapps.shuttle.model.Album)
         fun showDeleteError(error: Error)
         fun showTagEditor(songs: List<Song>)
@@ -41,6 +42,7 @@ interface AlbumDetailContract {
         fun addToQueue(song: Song)
         fun playNext(album: com.simplecityapps.shuttle.model.Album)
         fun playNext(song: Song)
+        fun getCurrentSong(): Song?
         fun exclude(song: Song)
         fun editTags(song: Song)
         fun editTags(album: com.simplecityapps.shuttle.model.Album)
@@ -93,11 +95,13 @@ class AlbumDetailPresenter @AssistedInject constructor(
 
     override fun onSongClicked(song: Song) {
         launch {
+            Timber.i("Current song: ${queueManager.getCurrentItem()?.song?.name} new song: ${song.name}")
             if (queueManager.setQueue(songs = songs, position = songs.indexOf(song))) {
                 playbackManager.load { result ->
                     result.onSuccess { playbackManager.play() }
                     result.onFailure { error -> view?.showLoadError(error as Error) }
                 }
+                view?.onCurrentSongChanged(songs)
             }
         }
     }
@@ -139,6 +143,10 @@ class AlbumDetailPresenter @AssistedInject constructor(
             playbackManager.playNext(listOf(song))
             view?.onAddedToQueue(song.name ?: context.getString(R.string.unknown))
         }
+    }
+
+    override fun getCurrentSong(): Song? {
+        return queueManager.getCurrentItem()?.song
     }
 
     override fun exclude(song: Song) {

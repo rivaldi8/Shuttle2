@@ -48,6 +48,7 @@ import com.squareup.phrase.Phrase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -237,6 +238,7 @@ class AlbumDetailFragment :
     // AlbumDetailContract.View Implementation
 
     override fun setData(songs: List<com.simplecityapps.shuttle.model.Song>) {
+        Timber.i("AlbumDetailFragment.setData")
         val discGroupingSongsMap = songs
             .groupBy { song -> song.disc ?: 1 }
             .toSortedMap()
@@ -256,7 +258,11 @@ class AlbumDetailFragment :
                     if (groupingEntry.key.isNotEmpty()) {
                         viewBinders.add(GroupingBinder(groupingEntry.key))
                     }
-                    viewBinders.addAll(groupingEntry.value.map { song -> DetailSongBinder(song, songBinderListener) })
+                    viewBinders.addAll(
+                        groupingEntry.value.map { song ->
+                            DetailSongBinder(song, presenter, songBinderListener)
+                        }
+                    )
                     viewBinders
                 }
 
@@ -274,6 +280,10 @@ class AlbumDetailFragment :
 
     override fun onAddedToQueue(name: String) {
         Toast.makeText(context, Phrase.from(requireContext(), R.string.queue_item_added).put("item_name", name).format(), Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onCurrentSongChanged(songs: List<com.simplecityapps.shuttle.model.Song>) {
+        setData(songs)
     }
 
     override fun setAlbum(album: com.simplecityapps.shuttle.model.Album) {
