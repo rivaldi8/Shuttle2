@@ -13,12 +13,11 @@ import com.simplecityapps.shuttle.model.Song
 import com.simplecityapps.shuttle.ui.common.recyclerview.SectionViewBinder
 import com.simplecityapps.shuttle.ui.common.recyclerview.ViewTypes
 import com.simplecityapps.shuttle.ui.common.utils.toHms
-import com.simplecityapps.shuttle.ui.screens.library.albums.detail.AlbumDetailPresenter
 import timber.log.Timber
 
 class DetailSongBinder(
     val song: Song,
-    val albumDetailPresenter: AlbumDetailPresenter?,
+    val currentSong: Song?,
     val listener: Listener
 ) : ViewBinder,
     SectionViewBinder {
@@ -74,8 +73,8 @@ class DetailSongBinder(
             super.bind(viewBinder, isPartial)
 
             Timber.i("DetailSongBinder.ViewHolder.bind")
-            Timber.i("Current track: ${viewBinder.song.track} current presenter track: ${viewBinder.albumDetailPresenter?.getCurrentSong()?.track}")
-            itemView.isActivated = viewBinder.song == viewBinder.albumDetailPresenter?.getCurrentSong()
+            Timber.i("Current track: ${viewBinder.song.track} current presenter track: ${viewBinder.currentSong?.track}")
+            itemView.isActivated = viewBinder.song == viewBinder.currentSong
             trackTextView.text = viewBinder.song.track?.toString()
             titleTextView.text = viewBinder.song.name
             durationTextView.text = viewBinder.song.duration.toHms("--:--")

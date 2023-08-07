@@ -245,6 +245,7 @@ class AlbumDetailFragment :
             .mapValues { entry ->
                 entry.value.groupBy { song -> song.grouping ?: "" }
             }
+        val currentSong = presenter.getCurrentSong()
 
         adapter.update(
             discGroupingSongsMap.flatMap { discEntry ->
@@ -260,7 +261,7 @@ class AlbumDetailFragment :
                     }
                     viewBinders.addAll(
                         groupingEntry.value.map { song ->
-                            DetailSongBinder(song, presenter, songBinderListener)
+                            DetailSongBinder(song, currentSong, songBinderListener)
                         }
                     )
                     viewBinders
