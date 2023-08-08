@@ -28,7 +28,7 @@ interface AlbumDetailContract {
         fun setData(songs: List<Song>)
         fun showLoadError(error: Error)
         fun onAddedToQueue(name: String)
-        fun onCurrentSongChanged(songs: List<Song>)
+        fun onCurrentSongChanged(newCurrentSong: Song)
         fun setAlbum(album: com.simplecityapps.shuttle.model.Album)
         fun showDeleteError(error: Error)
         fun showTagEditor(songs: List<Song>)
@@ -65,7 +65,8 @@ class AlbumDetailPresenter @AssistedInject constructor(
         fun create(album: com.simplecityapps.shuttle.model.Album): AlbumDetailPresenter
     }
 
-    private var songs: List<Song> = emptyList()
+    var songs: List<Song> = emptyList()
+        private set
 
     override fun bindView(view: AlbumDetailContract.View) {
         super.bindView(view)
@@ -101,7 +102,7 @@ class AlbumDetailPresenter @AssistedInject constructor(
                     result.onSuccess { playbackManager.play() }
                     result.onFailure { error -> view?.showLoadError(error as Error) }
                 }
-                view?.onCurrentSongChanged(songs)
+                view?.onCurrentSongChanged(song)
             }
         }
     }

@@ -25,6 +25,7 @@ import au.com.simplecityapps.shuttle.imageloading.ArtworkImageLoader
 import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.adapter.ViewBinder
 import com.simplecityapps.shuttle.R
+import com.simplecityapps.shuttle.model.Song
 import com.simplecityapps.shuttle.ui.common.TagEditorMenuSanitiser
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.autoClearedNullable
@@ -283,8 +284,8 @@ class AlbumDetailFragment :
         Toast.makeText(context, Phrase.from(requireContext(), R.string.queue_item_added).put("item_name", name).format(), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onCurrentSongChanged(songs: List<com.simplecityapps.shuttle.model.Song>) {
-        setData(songs)
+    override fun onCurrentSongChanged(newCurrentSong: Song) {
+        setData(presenter.songs)
     }
 
     override fun setAlbum(album: com.simplecityapps.shuttle.model.Album) {
