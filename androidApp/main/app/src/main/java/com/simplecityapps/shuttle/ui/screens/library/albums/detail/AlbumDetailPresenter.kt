@@ -7,7 +7,9 @@ import com.simplecityapps.mediaprovider.repository.albums.AlbumQuery
 import com.simplecityapps.mediaprovider.repository.albums.AlbumRepository
 import com.simplecityapps.mediaprovider.repository.songs.SongRepository
 import com.simplecityapps.playback.PlaybackManager
+import com.simplecityapps.playback.queue.QueueChangeCallback
 import com.simplecityapps.playback.queue.QueueManager
+import com.simplecityapps.playback.queue.QueueWatcher
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.model.Song
 import com.simplecityapps.shuttle.query.SongQuery
@@ -56,9 +58,11 @@ class AlbumDetailPresenter @AssistedInject constructor(
     private val songRepository: SongRepository,
     private val playbackManager: PlaybackManager,
     private val queueManager: QueueManager,
+    private val queueWatcher: QueueWatcher,
     @Assisted private val album: com.simplecityapps.shuttle.model.Album
 ) : BasePresenter<AlbumDetailContract.View>(),
-    AlbumDetailContract.Presenter {
+    AlbumDetailContract.Presenter,
+    QueueChangeCallback {
 
     @AssistedInject.Factory
     interface Factory {
@@ -71,6 +75,7 @@ class AlbumDetailPresenter @AssistedInject constructor(
     override fun bindView(view: AlbumDetailContract.View) {
         super.bindView(view)
 
+        queueWatcher.addCallback(this)
         view.setAlbum(album)
 
         launch {
@@ -102,8 +107,13 @@ class AlbumDetailPresenter @AssistedInject constructor(
                     result.onSuccess { playbackManager.play() }
                     result.onFailure { error -> view?.showLoadError(error as Error) }
                 }
-                view?.onCurrentSongChanged(song)
             }
+        }
+    }
+
+    override fun onQueuePositionChanged(oldPosition: Int?, newPosition: Int?) {
+        queueManager.getCurrentItem()?.song?.let {
+            view?.onCurrentSongChanged(it)
         }
     }
 
