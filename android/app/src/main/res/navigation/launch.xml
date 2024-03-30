@@ -26,7 +26,7 @@
             app:popUpToInclusive="true" />
         <argument
             android:name="isOnboarding"
-            android:defaultValue="true"
+            android:defaultValue="false"
             app:argType="boolean" />
     </fragment>
 
