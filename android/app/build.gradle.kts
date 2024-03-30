@@ -1,7 +1,3 @@
-repositories {
-    google()
-}
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -266,7 +262,6 @@ android {
         androidTestImplementation("org.hamcrest:hamcrest-library:1.3")
         implementation("androidx.test.ext:junit-ktx:1.1.5")
         debugImplementation("androidx.fragment:fragment-testing:$fragment_version")
-        // implementation("androidx.compose.ui.test.junit4:1.6.0")
         androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
         // Remote config
