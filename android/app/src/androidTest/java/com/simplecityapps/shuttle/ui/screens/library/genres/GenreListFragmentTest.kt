@@ -14,6 +14,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.ui.MainActivity
@@ -51,7 +52,8 @@ class GenreListFragmentTest {
                 .navigate(R.id.mainFragment)
             // val navController = Navigation.findNavController(it, R.id.navHostFragment)
             // navController.navigate(R.id.libraryFragment)
-            // it.preferenceManager.hasSeenThankYouDialog = true
+            it.preferenceManager.hasSeenThankYouDialog = true
+            it.preferenceManager.showChangelogOnLaunch = false
             // val frag = it.supportFragmentManager.findFragmentById(R.id.mainFragment)
             /*
             it.runOnUiThread {
@@ -63,7 +65,7 @@ class GenreListFragmentTest {
             // MatcherAssert.assertThat(viewById, CoreMatchers.notNullValue())
             // MatcherAssert.assertThat(viewById, CoreMatchers.instanceOf(CustomBottomSheetBehavior::class.java))
         }
-        onView(withId(R.id.closeButton)).perform(click())
+        // onView(withId(R.id.closeButton)).perform(click())
     }
 
     /*
@@ -79,7 +81,9 @@ class GenreListFragmentTest {
 
     @Test
     fun testEventFragment2() {
-        onView(withId(R.id.recyclerView)).check(matches(isDisplayed()))
+        // onView(withId(R.id.recyclerView)).check(matches(isDisplayed()))
+        onView(withText("Genres")).check(matches(isDisplayed()))
+        onView(withText("Genres")).perform(click())
         // composeTestRule.onNodeWithText("Apple").assertIsDisplayed()
     }
 }
