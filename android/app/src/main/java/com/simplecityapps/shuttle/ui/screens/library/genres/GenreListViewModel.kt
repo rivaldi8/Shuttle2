@@ -1,5 +1,6 @@
 package com.simplecityapps.shuttle.ui.screens.library.genres
 
+import androidx.annotation.OpenForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplecityapps.mediaprovider.MediaImporter
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OpenForTesting
 @HiltViewModel
 class GenreListViewModel @Inject constructor(
     private val genreRepository: GenreRepository,
