@@ -1,8 +1,10 @@
 package com.simplecityapps.shuttle.ui.screens.library.genres
 
 import android.view.View
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.fragment.app.testing.withFragment
@@ -84,6 +86,8 @@ class GenreListFragmentTest {
         // onView(withId(R.id.recyclerView)).check(matches(isDisplayed()))
         onView(withText("Genres")).check(matches(isDisplayed()))
         onView(withText("Genres")).perform(click())
+        composeTestRule.onNodeWithTag("genres-list-lazy-column")
+            .assertIsDisplayed()
         // composeTestRule.onNodeWithText("Apple").assertIsDisplayed()
     }
 }
