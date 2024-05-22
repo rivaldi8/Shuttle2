@@ -11,6 +11,7 @@ plugins {
 
 android {
     val fragment_version = "1.6.2"
+    val mockk_version = "1.13.11"
 
     compileSdk = 34
 
@@ -263,6 +264,8 @@ android {
         implementation("androidx.test.ext:junit-ktx:1.1.5")
         debugImplementation("androidx.fragment:fragment-testing:$fragment_version")
         androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+        androidTestImplementation("io.mockk:mockk-android:${mockk_version}")
+        androidTestImplementation("io.mockk:mockk-agent:${mockk_version}")
 
         // Remote config
         implementation(project(":android:remote-config"))
