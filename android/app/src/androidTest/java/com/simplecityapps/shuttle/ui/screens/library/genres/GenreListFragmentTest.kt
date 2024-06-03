@@ -31,7 +31,6 @@ import io.mockk.impl.annotations.MockK
 
 @HiltAndroidTest
 class GenreListFragmentTest {
-    @Bind
     @MockK
     lateinit var viewModel: GenreListViewModel
 
