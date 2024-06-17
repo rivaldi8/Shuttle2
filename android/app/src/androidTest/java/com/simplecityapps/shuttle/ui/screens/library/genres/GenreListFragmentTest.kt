@@ -31,7 +31,7 @@ import io.mockk.impl.annotations.MockK
 
 @HiltAndroidTest
 class GenreListFragmentTest {
-    @MockK
+    @MockK(relaxed = true)
     lateinit var viewModel: GenreListViewModel
 
     private val hiltRule = HiltAndroidRule(this)

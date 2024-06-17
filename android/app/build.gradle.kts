@@ -280,6 +280,14 @@ android {
     }
 
     buildFeatures.buildConfig = true
+
+    packaging {
+        resources.excludes.addAll(
+            listOf(
+                "META-INF/*",
+            )
+        )
+    }
 }
 
 apply(plugin = "com.google.gms.google-services")
