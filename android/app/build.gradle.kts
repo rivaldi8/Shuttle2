@@ -132,6 +132,12 @@ android {
         // RecyclerView FastScroll
         implementation("com.github.timusus:RecyclerView-FastScroll:dev-SNAPSHOT")
 
+        implementation("io.github.oikvpqya.compose.fastscroller:fastscroller-core:0.2.0")
+        // Optional: Provides scroll bar Material Design 3 theme by defaultMaterialScrollbarStyle
+        implementation("io.github.oikvpqya.compose.fastscroller:fastscroller-material3:0.2.0")
+        // Optional: Provides scroll bar indicator shape
+        implementation("io.github.oikvpqya.compose.fastscroller:fastscroller-indicator:0.2.0")
+
         // AppCompat
         implementation("androidx.appcompat:appcompat:1.6.1")
 
@@ -185,7 +191,7 @@ android {
         implementation("androidx.viewpager2:viewpager2:1.1.0-beta02")
 
         // ViewPager Circle Indicator
-        implementation("me.relex:circleindicator:2.1.4")
+        implementation("me.relex:circleindicator:2.1.6")
 
         // AndroidX Media
         implementation("androidx.media:media:1.6.0")
