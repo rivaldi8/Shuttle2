@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface AlbumRepository {
     fun getAlbums(query: AlbumQuery): Flow<List<com.simplecityapps.shuttle.model.Album>>
+    fun getInProgressAlbums(): Flow<List<com.simplecityapps.shuttle.model.Album>>
 }

@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 
 interface HomeContract {
     data class HomeData(
+        val inProgressAlbums: List<Album>,
         val mostPlayedAlbums: List<Album>,
         val recentlyPlayedAlbums: List<Album>,
         val albumsFromThisYear: List<Album>,
@@ -99,6 +100,11 @@ constructor(
 
     override fun loadData() {
         launch {
+            val inProgressAlbums =
+                albumRepository
+                    .getInProgressAlbums()
+                    .map { it.take(20) }
+
             val mostPlayedAlbums =
                 albumRepository
                     .getAlbums(
@@ -125,8 +131,15 @@ constructor(
                     .map { it.shuffled(Random(seed)) }
                     .map { it.take(20) }
 
-            combine(mostPlayedAlbums, recentlyPlayedAlbums, albumsFromThisYear, unplayedAlbumArtists) { mostPlayedAlbums, recentlyPlayedAlbums, albumsFromThisYear, unplayedAlbumArtists ->
+            combine(
+                inProgressAlbums,
+                mostPlayedAlbums,
+                recentlyPlayedAlbums,
+                albumsFromThisYear,
+                unplayedAlbumArtists,
+            ) { inProgressAlbums, mostPlayedAlbums, recentlyPlayedAlbums, albumsFromThisYear, unplayedAlbumArtists ->
                 HomeContract.HomeData(
+                    inProgressAlbums = inProgressAlbums,
                     mostPlayedAlbums = mostPlayedAlbums,
                     recentlyPlayedAlbums = recentlyPlayedAlbums,
                     albumsFromThisYear = albumsFromThisYear,

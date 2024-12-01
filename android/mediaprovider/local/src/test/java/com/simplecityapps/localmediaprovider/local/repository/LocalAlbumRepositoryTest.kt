@@ -1,0 +1,303 @@
+package com.simplecityapps.localmediaprovider.local.repository
+
+import app.cash.turbine.test
+import com.google.common.truth.Truth.assertThat
+import com.simplecityapps.localmediaprovider.local.data.room.dao.SongDataDao
+import com.simplecityapps.mediaprovider.repository.albums.AlbumQuery
+import com.simplecityapps.shuttle.model.Album
+import com.simplecityapps.shuttle.model.AlbumArtistGroupKey
+import com.simplecityapps.shuttle.model.AlbumGroupKey
+import com.simplecityapps.shuttle.model.MediaProviderType
+import com.simplecityapps.shuttle.model.Song
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
+
+private const val ARTIST_NAME = "artist-name"
+private const val ALBUM_NAME = "album-name"
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class LocalAlbumRepositoryTest {
+    private lateinit var repository: LocalAlbumRepository
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var testScope: TestScope
+
+    private lateinit var mockSongDataDao: SongDataDao
+
+    @Before
+    fun setUp() {
+        mockSongDataDao = mockk(relaxed = true)
+
+        Dispatchers.setMain(testDispatcher)
+        testScope = TestScope(testDispatcher)
+
+        repository = LocalAlbumRepository(testScope, mockSongDataDao)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `returns proper albums`() = testScope.runTest {
+        val song = createSong(
+            name = "song-name",
+            albumArtist = "album-artist",
+            album = ALBUM_NAME,
+            track = 1,
+            duration = 1,
+            date = LocalDate(2024, 2, 11),
+            playCount = 0,
+            lastPlayed = Clock.System.now(),
+            lastCompleted = Clock.System.now(),
+            mediaProvider = MediaProviderType.Shuttle,
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(listOf(song))
+
+        val albumFlow = repository.getAlbums(AlbumQuery.All())
+
+        albumFlow.test {
+            val albums = awaitItem()
+
+            assertThat(albums)
+                .containsExactly(
+                    Album(
+                        name = song.album,
+                        albumArtist = song.albumArtist,
+                        artists = song.artists,
+                        songCount = 1,
+                        duration = song.duration,
+                        year = song.date?.year,
+                        playCount = song.playCount,
+                        lastSongPlayed = song.lastPlayed,
+                        lastSongCompleted = song.lastCompleted,
+                        groupKey = song.albumGroupKey,
+                        mediaProviders = listOf(song.mediaProvider),
+                    ),
+                ).inOrder()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - returns in progress albums`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            albumArtist = ARTIST_NAME,
+            name = ALBUM_NAME,
+            songsPlayCount = listOf(1, 0),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            assertThat(inProgressAlbums).hasSize(1)
+            assertThat(inProgressAlbums[0].albumArtist).isEqualTo(ARTIST_NAME)
+            assertThat(inProgressAlbums[0].name).isEqualTo(ALBUM_NAME)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - handles properly albums with a single song that's been played`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            songsPlayCount = listOf(1),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            assertThat(inProgressAlbums).isEmpty()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - handles properly albums with a single song that hasn't been played`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            songsPlayCount = listOf(0),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            assertThat(inProgressAlbums).isEmpty()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - doesn't return albums with songs played in alternation`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            songsPlayCount = listOf(1, 0, 1),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            assertThat(inProgressAlbums).isEmpty()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - doesn't return albums if they haven't been started playing from the beginning`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            songsPlayCount = listOf(0, 1),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            assertThat(inProgressAlbums).isEmpty()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            name = ALBUM_NAME,
+            albumArtist = ARTIST_NAME,
+            songsPlayCount = listOf(11, 22),
+        )
+
+        assertThat(albumSongs).isEqualTo(
+            listOf(
+                createSong(
+                    name = "song-1",
+                    album = ALBUM_NAME,
+                    albumArtist = ARTIST_NAME,
+                    track = 1,
+                    playCount = 11,
+                ),
+                createSong(
+                    name = "song-2",
+                    album = ALBUM_NAME,
+                    albumArtist = ARTIST_NAME,
+                    track = 2,
+                    playCount = 22,
+                ),
+            ),
+        )
+    }
+
+    private fun createAlbumSongsWithPlayCounts(
+        name: String = ALBUM_NAME,
+        albumArtist: String = "album-artist",
+        songsPlayCount: List<Int> = emptyList(),
+    ): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
+        createSong(
+            name = "song-${index + 1}",
+            albumArtist = albumArtist,
+            album = name,
+            track = index + 1,
+            playCount = playCount,
+        )
+    }
+
+    private fun createAlbum(
+        name: String = ALBUM_NAME,
+        albumArtist: String = "album-artist",
+        artists: List<String> = emptyList(),
+        songCount: Int = 11,
+        duration: Int = 22,
+        year: Int = 2024,
+        playCount: Int = 33,
+        lastSongPlayed: Instant = Instant.fromEpochSeconds(1),
+        lastSongCompleted: Instant = Instant.fromEpochSeconds(1),
+        groupKey: AlbumGroupKey = AlbumGroupKey("group-key", AlbumArtistGroupKey("album-artist-group-key")),
+        mediaProviders: List<MediaProviderType> = emptyList(),
+    ) = Album(
+        name = name,
+        albumArtist = albumArtist,
+        artists = artists,
+        songCount = songCount,
+        duration = duration,
+        year = year,
+        playCount = playCount,
+        lastSongPlayed = lastSongPlayed,
+        lastSongCompleted = lastSongCompleted,
+        groupKey = groupKey,
+        mediaProviders = mediaProviders,
+    )
+
+    private fun createSong(
+        name: String = "song-name",
+        albumArtist: String = "album-artist",
+        album: String = ALBUM_NAME,
+        track: Int = 1,
+        duration: Int = 1,
+        date: LocalDate = LocalDate(2024, 2, 11),
+        playCount: Int = 0,
+        lastPlayed: Instant = Instant.fromEpochSeconds(1),
+        lastCompleted: Instant = Instant.fromEpochSeconds(1),
+        mediaProvider: MediaProviderType = MediaProviderType.Shuttle,
+    ) = Song(
+        id = 1,
+        name = name,
+        albumArtist = albumArtist,
+        artists = emptyList(),
+        album = album,
+        track = track,
+        disc = 1,
+        duration = duration,
+        date = date,
+        genres = emptyList(),
+        path = "/path/to/song",
+        size = 1,
+        mimeType = "ogg",
+        lastModified = Instant.fromEpochSeconds(1),
+        lastPlayed = lastPlayed,
+        lastCompleted = lastCompleted,
+        playCount = playCount,
+        playbackPosition = 1,
+        blacklisted = false,
+        externalId = null,
+        mediaProvider = mediaProvider,
+        replayGainTrack = null,
+        replayGainAlbum = null,
+        lyrics = null,
+        grouping = null,
+        bitRate = null,
+        bitDepth = null,
+        sampleRate = null,
+        channelCount = null,
+    )
+}

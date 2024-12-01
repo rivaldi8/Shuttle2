@@ -189,6 +189,10 @@ class HomeFragment :
 
     override fun setData(data: HomeContract.HomeData) {
         val viewBinders = mutableListOf<ViewBinder>()
+        if (data.inProgressAlbums.isNotEmpty()) {
+            viewBinders.add(HeaderBinder(getString(R.string.home_title_in_progress), getString(R.string.home_description_in_progress)))
+            viewBinders.add(HorizontalAlbumListBinder(data.inProgressAlbums, imageLoader, scope = lifecycle.coroutineScope, listener = albumBinderListener))
+        }
         if (data.recentlyPlayedAlbums.isNotEmpty()) {
             viewBinders.add(HeaderBinder(getString(R.string.home_title_recent), getString(R.string.home_description_recently_played)))
             viewBinders.add(HorizontalAlbumListBinder(data.recentlyPlayedAlbums, imageLoader, scope = lifecycle.coroutineScope, listener = albumBinderListener))

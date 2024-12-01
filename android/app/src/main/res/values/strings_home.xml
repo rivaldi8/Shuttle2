@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- The title shown for list of in progress albums-->
+    <string name="home_title_in_progress">In progress</string>
+    <!-- Description for list of in progress albums -->
+    <string name="home_description_in_progress">Albums you are listening to</string>
     <!-- The title shown for list of recently played albums-->
     <string name="home_title_recent">Recent</string>
     <!-- Description for list of recently played albums -->
