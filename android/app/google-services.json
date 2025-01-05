@@ -71,6 +71,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:715021087838:android:1d00f9b254a56e8e",
+        "android_client_info": {
+          "package_name": "com.simplecityapps.shuttle.alexm.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "715021087838-snh3d1mt6e4m5jidj74uhdg01b3rntl8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1tjTqlypby44uG8dWh4ESDgF0A5iI-9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "715021087838-snh3d1mt6e4m5jidj74uhdg01b3rntl8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
