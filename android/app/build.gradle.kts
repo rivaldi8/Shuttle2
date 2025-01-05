@@ -65,6 +65,18 @@ android {
         }
     }
 
+    flavorDimensions += "version"
+    productFlavors {
+        create("devel") {
+            resValue("string", "app_name", "S2 (Dev)")
+        }
+        create("alexm") {
+            applicationIdSuffix = ".alexm"
+            versionNameSuffix = "-alexm"
+            resValue("string", "app_name", "S2 (alexm)")
+        }
+    }
+
     packaging {
         resources {
             resources.excludes += setOf("META-INF/*.kotlin_module")
@@ -89,6 +101,8 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+        resValues = true
     }
 
     composeOptions {
