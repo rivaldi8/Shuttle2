@@ -77,6 +77,7 @@ class AndroidSettingsCatalogTest {
             "pref_screen_media",
             "pref_screen_artwork",
             "pref_screen_widget",
+            "pref_screen_backup_restore",
             "pref_screen_app_info",
             "pref_screen_privacy",
             "pref_screen_debug",

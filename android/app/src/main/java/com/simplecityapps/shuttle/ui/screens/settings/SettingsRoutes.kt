@@ -1,11 +1,18 @@
 package com.simplecityapps.shuttle.ui.screens.settings
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -15,6 +22,7 @@ import androidx.navigation3.runtime.NavKey
 import com.simplecityapps.shuttle.BuildConfig
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.entitlement.PaywallSource
+import com.simplecityapps.shuttle.model.BackupRestoreError
 import com.simplecityapps.shuttle.ui.common.ConsumeEvents
 import com.simplecityapps.shuttle.ui.screens.paywall.PaywallRoute
 import com.simplecityapps.shuttle.ui.screens.settings.about.LicencesScreen
@@ -28,6 +36,9 @@ import com.simplecityapps.shuttle.ui.screens.settings.excluded.ExcludedSongsView
 import com.simplecityapps.shuttle.ui.screens.settings.model.AndroidSettingsCatalog
 import com.simplecityapps.shuttle.ui.screens.settings.model.SettingsDestination
 import com.simplecityapps.shuttle.ui.screens.settings.model.SettingsLink
+import com.simplecityapps.shuttle.ui.screens.settings.screens.BackupRestoreScreen
+import com.simplecityapps.shuttle.ui.screens.settings.screens.BackupRestoreUiState
+import com.simplecityapps.shuttle.ui.screens.settings.screens.BackupRestoreViewModel
 import com.simplecityapps.shuttle.ui.screens.sources.FolderRulesEntry
 import com.simplecityapps.shuttle.ui.screens.sources.sourcesRows
 import com.simplecityapps.shuttle.ui.shell.AppNavigator
@@ -37,7 +48,9 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import java.time.LocalDate
 import java.util.Optional
+import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,6 +82,9 @@ data object LiveLogRoute : NavKey
 @Serializable
 data object FolderRulesRoute : NavKey
 
+@Serializable
+data object BackupRestoreRoute : NavKey
+
 /** The Settings screens' entries, for the shell's entry provider. */
 fun EntryProviderScope<NavKey>.settingsEntries(navigator: AppNavigator) {
     val navigateUp = { navigator.back() }
@@ -79,6 +95,7 @@ fun EntryProviderScope<NavKey>.settingsEntries(navigator: AppNavigator) {
             SettingsLink.WhatsNew -> navigator.open(WhatsNewRoute)
             SettingsLink.Licences -> navigator.open(LicencesRoute)
             SettingsLink.LiveLog -> navigator.open(LiveLogRoute)
+            SettingsLink.BackupRestore -> navigator.open(BackupRestoreRoute)
         }
     }
     entry<SettingsRoute> {
@@ -109,6 +126,9 @@ fun EntryProviderScope<NavKey>.settingsEntries(navigator: AppNavigator) {
             onNavigateUp = { navigateUp() },
             onOpenWebsite = { url -> runCatching { uriHandler.openUri(url) }.onFailure { Timber.w(it, "No app to open $url") } }
         )
+    }
+    entry<BackupRestoreRoute> {
+        BackupRestoreEntry(onNavigateUp = { navigateUp() })
     }
 }
 
@@ -212,4 +232,85 @@ private fun LiveLogEntry(onNavigateUp: () -> Unit) {
             onPauseOrDispose {}
         }
     }
+}
+
+@Composable
+private fun BackupRestoreEntry(onNavigateUp: () -> Unit) {
+    val viewModel: BackupRestoreViewModel = metroViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val resources = LocalResources.current
+
+    val backupDatabaseLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/x-sqlite3")
+    ) { uri ->
+        uri?.let { viewModel.backUpDatabase(it) }
+    }
+
+    val restoreDatabaseLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { viewModel.restoreDatabase(it) }
+    }
+
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is BackupRestoreUiState.BackupSuccess -> {
+                Toast.makeText(context, R.string.settings_backup_success, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            is BackupRestoreUiState.RestoreSuccess -> {
+                Toast.makeText(context, R.string.settings_restore_success, Toast.LENGTH_LONG).show()
+                restartApp(context)
+            }
+
+            is BackupRestoreUiState.Error -> {
+                val message = when (val error = state.error) {
+                    is BackupRestoreError.VersionMismatch -> resources.getString(
+                        R.string.settings_restore_failed,
+                        "Newer database version (Restored: ${error.restored}, Current: ${error.current})"
+                    )
+                    is BackupRestoreError.IntegrityCheckFailed -> resources.getString(
+                        R.string.settings_restore_failed,
+                        "Database integrity check failed"
+                    )
+                    else -> resources.getString(R.string.settings_restore_failed, state.error.message)
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                viewModel.resetState()
+            }
+
+            else -> {}
+        }
+    }
+
+    BackupRestoreScreen(
+        uiState = uiState,
+        onBackUpClick = {
+            val today = LocalDate.now()
+            backupDatabaseLauncher.launch("shuttle-music-backup-$today.db")
+        },
+        onRestoreClick = {
+            restoreDatabaseLauncher.launch(
+                arrayOf(
+                    "application/x-sqlite3",
+                    "application/octet-stream",
+                    "*/*"
+                )
+            )
+        },
+        onNavigateUp = onNavigateUp
+    )
+}
+
+private fun restartApp(context: Context) {
+    val packageManager = context.packageManager
+    val componentName = packageManager
+        .getLaunchIntentForPackage(context.packageName)!!
+        .component
+    val mainIntent = Intent.makeRestartActivityTask(componentName)
+    mainIntent.setPackage(context.packageName)
+    context.startActivity(mainIntent)
+    exitProcess(0)
 }

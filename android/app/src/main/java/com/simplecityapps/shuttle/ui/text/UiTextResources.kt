@@ -73,6 +73,7 @@ val StringKey.resId: Int
         StringKey.SETTINGS_DESTINATION_SOURCES -> R.string.settings_destination_sources
         StringKey.SETTINGS_DESTINATION_LIBRARY -> R.string.settings_destination_library
         StringKey.PREF_CATEGORY_TITLE_PRIVACY -> R.string.pref_category_title_privacy
+        StringKey.PREF_CATEGORY_TITLE_BACKUP_RESTORE -> R.string.pref_category_title_backup_restore
         StringKey.SETTINGS_DESTINATION_ABOUT -> R.string.settings_destination_about
         StringKey.PREF_STREAMING_QUALITY_ORIGINAL -> R.string.pref_streaming_quality_original
         StringKey.PREF_STREAMING_QUALITY_320 -> R.string.pref_streaming_quality_320

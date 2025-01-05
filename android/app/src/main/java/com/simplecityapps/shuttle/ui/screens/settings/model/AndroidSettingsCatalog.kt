@@ -210,6 +210,11 @@ object AndroidSettingsCatalog : SettingsCatalog {
                         title = StringKey.PREF_EXCLUDE_TITLE,
                         summary = StringKey.PREF_EXCLUDE_SUMMARY,
                         key = "pref_excluded"
+                    ),
+                    SettingItem.Navigate(
+                        target = SettingsLink.BackupRestore,
+                        title = StringKey.PREF_CATEGORY_TITLE_BACKUP_RESTORE,
+                        key = "pref_screen_backup_restore"
                     )
                 )
             ),

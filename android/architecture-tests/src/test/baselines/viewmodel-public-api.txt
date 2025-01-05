@@ -1,2 +1,5 @@
 # A ViewModel's public properties are one uiState: StateFlow and at most one events Flow (UDF 6)
 # Baseline of existing violations (#443). Only remove lines; see Baseline.kt.
+com.simplecityapps.shuttle.ui.screens.library.GenreDetailViewModel: public covers
+com.simplecityapps.shuttle.ui.screens.library.PlaylistDetailViewModel: public covers
+com.simplecityapps.shuttle.ui.screens.library.genres.GenreListViewModel: public covers

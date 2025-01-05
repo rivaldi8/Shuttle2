@@ -2,6 +2,24 @@
 <resources>
     <!-- The title of 'settings' in the bottom settings menu -->
     <string name="settings_menu_settings">Settings</string>
+    <!-- The title of 'Back up database' in the bottom settings menu -->
+    <string name="settings_menu_backup_database">Back up Database</string>
+    <!-- The title of 'Restore database' in the bottom settings menu -->
+    <string name="settings_menu_restore_database">Restore Database</string>
+    <!-- Settings: Title for backup and restore related settings -->
+    <string name="pref_category_title_backup_restore">Backup &amp; Restore</string>
+    <!-- Shown while the database is being backed up -->
+    <string name="database_backup_in_progress">Backing up Database…</string>
+    <!-- Shown while the database is being restored -->
+    <string name="database_restore_in_progress">Restoring Database…</string>
+    <!-- Message shown when the database has been successfully backed up -->
+    <string name="settings_backup_success">Database backed up successfully</string>
+    <!-- Message shown when the database backup failed -->
+    <string name="settings_backup_failed">Backup failed: %1$s</string>
+    <!-- Message shown when the database has been successfully restored -->
+    <string name="settings_restore_success">Database restored successfully. Restarting the app…</string>
+    <!-- Message shown when the database restore failed -->
+    <string name="settings_restore_failed">Restore failed: %1$s</string>
     <!-- Settings option to clear (delete) all existing artwork -->
     <string name="settings_dialog_title_clear_artwork">Clear Artwork</string>
     <!-- Button shown to confirm clearing (deleting) of existing artwork -->
