@@ -121,7 +121,7 @@ class LocalAlbumRepositoryTest {
     }
 
     @Test
-    fun `getInProgressAlbums - handles properly albums with a single song that's been played`() = testScope.runTest {
+    fun `getInProgressAlbums - doesn't return albums with a single (played) song`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
             songsPlayCount = listOf(1),
         )
@@ -139,7 +139,7 @@ class LocalAlbumRepositoryTest {
     }
 
     @Test
-    fun `getInProgressAlbums - handles properly albums with a single song that hasn't been played`() = testScope.runTest {
+    fun `getInProgressAlbums - doesn't return albums with a single (non-played) song`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
             songsPlayCount = listOf(0),
         )
@@ -178,6 +178,24 @@ class LocalAlbumRepositoryTest {
     fun `getInProgressAlbums - doesn't return albums if they haven't been started playing from the beginning`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
             songsPlayCount = listOf(0, 1),
+        )
+        every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
+
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            inProgressAlbums.shouldBeEmpty()
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - doesn't return albums that all its songs have been played`() = testScope.runTest {
+        val albumSongs = createAlbumSongsWithPlayCounts(
+            songsPlayCount = listOf(1, 1),
         )
         every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
 
