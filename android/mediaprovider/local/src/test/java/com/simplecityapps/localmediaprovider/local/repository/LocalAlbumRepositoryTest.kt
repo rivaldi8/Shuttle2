@@ -1,7 +1,6 @@
 package com.simplecityapps.localmediaprovider.local.repository
 
 import app.cash.turbine.test
-import com.google.common.truth.Truth.assertThat
 import com.simplecityapps.localmediaprovider.local.data.room.dao.SongDataDao
 import com.simplecityapps.mediaprovider.repository.albums.AlbumQuery
 import com.simplecityapps.shuttle.model.Album
@@ -9,6 +8,9 @@ import com.simplecityapps.shuttle.model.AlbumArtistGroupKey
 import com.simplecityapps.shuttle.model.AlbumGroupKey
 import com.simplecityapps.shuttle.model.MediaProviderType
 import com.simplecityapps.shuttle.model.Song
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -74,22 +76,23 @@ class LocalAlbumRepositoryTest {
         albumFlow.test {
             val albums = awaitItem()
 
-            assertThat(albums)
-                .containsExactly(
-                    Album(
-                        name = song.album,
-                        albumArtist = song.albumArtist,
-                        artists = song.artists,
-                        songCount = 1,
-                        duration = song.duration,
-                        year = song.date?.year,
-                        playCount = song.playCount,
-                        lastSongPlayed = song.lastPlayed,
-                        lastSongCompleted = song.lastCompleted,
-                        groupKey = song.albumGroupKey,
-                        mediaProviders = listOf(song.mediaProvider),
-                    ),
-                ).inOrder()
+            // The output of shouldContainExactly is useless so, check each element
+            // instead
+            albums.shouldHaveSize(1)
+            albums[0] shouldBe
+                Album(
+                    name = song.album,
+                    albumArtist = song.albumArtist,
+                    artists = song.artists,
+                    songCount = 1,
+                    duration = song.duration,
+                    year = song.date?.year,
+                    playCount = song.playCount,
+                    lastSongPlayed = song.lastPlayed,
+                    lastSongCompleted = song.lastCompleted,
+                    groupKey = song.albumGroupKey,
+                    mediaProviders = listOf(song.mediaProvider),
+                )
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -109,9 +112,9 @@ class LocalAlbumRepositoryTest {
         inProgressAlbumsFlow.test {
             val inProgressAlbums = awaitItem()
 
-            assertThat(inProgressAlbums).hasSize(1)
-            assertThat(inProgressAlbums[0].albumArtist).isEqualTo(ARTIST_NAME)
-            assertThat(inProgressAlbums[0].name).isEqualTo(ALBUM_NAME)
+            inProgressAlbums.shouldHaveSize(1)
+            inProgressAlbums[0].albumArtist shouldBe ARTIST_NAME
+            inProgressAlbums[0].name shouldBe ALBUM_NAME
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -124,13 +127,12 @@ class LocalAlbumRepositoryTest {
         )
         every { mockSongDataDao.getAll() } returns flowOf(albumSongs)
 
-
         val inProgressAlbumsFlow = repository.getInProgressAlbums()
 
         inProgressAlbumsFlow.test {
             val inProgressAlbums = awaitItem()
 
-            assertThat(inProgressAlbums).isEmpty()
+            inProgressAlbums.shouldBeEmpty()
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -148,7 +150,7 @@ class LocalAlbumRepositoryTest {
         inProgressAlbumsFlow.test {
             val inProgressAlbums = awaitItem()
 
-            assertThat(inProgressAlbums).isEmpty()
+            inProgressAlbums.shouldBeEmpty()
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -166,7 +168,7 @@ class LocalAlbumRepositoryTest {
         inProgressAlbumsFlow.test {
             val inProgressAlbums = awaitItem()
 
-            assertThat(inProgressAlbums).isEmpty()
+            inProgressAlbums.shouldBeEmpty()
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -184,7 +186,7 @@ class LocalAlbumRepositoryTest {
         inProgressAlbumsFlow.test {
             val inProgressAlbums = awaitItem()
 
-            assertThat(inProgressAlbums).isEmpty()
+            inProgressAlbums.shouldBeEmpty()
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -198,24 +200,25 @@ class LocalAlbumRepositoryTest {
             songsPlayCount = listOf(11, 22),
         )
 
-        assertThat(albumSongs).isEqualTo(
-            listOf(
-                createSong(
-                    name = "song-1",
-                    album = ALBUM_NAME,
-                    albumArtist = ARTIST_NAME,
-                    track = 1,
-                    playCount = 11,
-                ),
-                createSong(
-                    name = "song-2",
-                    album = ALBUM_NAME,
-                    albumArtist = ARTIST_NAME,
-                    track = 2,
-                    playCount = 22,
-                ),
-            ),
-        )
+        // The output of shouldContainExactly is useless so, check each element
+        // instead
+        albumSongs.shouldHaveSize(2)
+        albumSongs[0] shouldBe
+            createSong(
+                name = "song-1",
+                album = ALBUM_NAME,
+                albumArtist = ARTIST_NAME,
+                track = 1,
+                playCount = 11,
+            )
+        albumSongs[1] shouldBe
+            createSong(
+                name = "song-2",
+                album = ALBUM_NAME,
+                albumArtist = ARTIST_NAME,
+                track = 2,
+                playCount = 22,
+            )
     }
 
     private fun createAlbumSongsWithPlayCounts(
