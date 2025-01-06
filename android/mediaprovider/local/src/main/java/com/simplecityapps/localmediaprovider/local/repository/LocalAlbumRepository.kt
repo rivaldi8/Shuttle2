@@ -68,12 +68,14 @@ class LocalAlbumRepository(
                     .groupBy { it.albumArtistGroupKey to it.albumGroupKey }
                     .filter { (_, albumSongs) ->
                         if (albumSongs.size == 1) {
+                            // We aren't interested in stray songs
                             return@filter false
                         }
 
                         val sortedSongs = albumSongs
                             .sortedBy { it.track }
 
+                        // Find the index of the first song that hasn't been played
                         var firstNonPlayedSong = 0
                         while (
                             firstNonPlayedSong < sortedSongs.size &&
@@ -82,10 +84,16 @@ class LocalAlbumRepository(
                             firstNonPlayedSong++
                         }
 
-                        if (firstNonPlayedSong == 0) {
+                        if (
+                            // The album hasn't been started listening
+                            (firstNonPlayedSong == 0) ||
+                            // All songs have been listened
+                            (firstNonPlayedSong == sortedSongs.size)
+                        ) {
                             return@filter false
                         }
 
+                        // Don't include albums that its songs have been listened randomly
                         val nonConsecutivePlayedSongIndex = sortedSongs
                             .subList(firstNonPlayedSong, sortedSongs.size)
                             .indexOfFirst { it.playCount > 0 }
