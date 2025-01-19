@@ -79,7 +79,9 @@ class DetailSongBinder(
             itemView.isActivated = viewBinder.song.id == viewBinder.currentSong?.id
             trackTextView.text = viewBinder.song.track?.toString()
             titleTextView.text = viewBinder.song.name
-            durationTextView.text = viewBinder.song.duration.toHms("--:--")
+            // TODO: Temporary hack, implement it properly
+            val playedMark = if (viewBinder.song.playCount > 0) "✓ " else ""
+            durationTextView.text = playedMark + viewBinder.song.duration.toHms("--:--")
 
             if ((viewBinder.song.type == Song.Type.Audiobook || viewBinder.song.type == Song.Type.Podcast) && viewBinder.song.playbackPosition != 0) {
                 progressBar.progress = (((viewBinder.song.playbackPosition.toFloat() / viewBinder.song.duration) * 1000).toInt())
