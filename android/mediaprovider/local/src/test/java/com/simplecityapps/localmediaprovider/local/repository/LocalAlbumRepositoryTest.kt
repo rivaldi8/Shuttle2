@@ -4,10 +4,9 @@ import app.cash.turbine.test
 import com.simplecityapps.localmediaprovider.local.data.room.dao.SongDataDao
 import com.simplecityapps.mediaprovider.repository.albums.AlbumQuery
 import com.simplecityapps.shuttle.model.Album
-import com.simplecityapps.shuttle.model.AlbumArtistGroupKey
-import com.simplecityapps.shuttle.model.AlbumGroupKey
 import com.simplecityapps.shuttle.model.MediaProviderType
 import com.simplecityapps.shuttle.model.Song
+import createSong
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -22,12 +21,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 
 private const val ARTIST_NAME = "artist-name"
 private const val ALBUM_NAME = "album-name"
@@ -210,6 +207,20 @@ class LocalAlbumRepositoryTest {
         }
     }
 
+    private fun createAlbumSongsWithPlayCounts(
+        name: String = ALBUM_NAME,
+        albumArtist: String = "album-artist",
+        songsPlayCount: List<Int> = emptyList(),
+    ): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
+        createSong(
+            name = "song-${index + 1}",
+            albumArtist = albumArtist,
+            album = name,
+            track = index + 1,
+            playCount = playCount,
+        )
+    }
+
     @Test
     fun `createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
@@ -238,87 +249,4 @@ class LocalAlbumRepositoryTest {
                 playCount = 22,
             )
     }
-
-    private fun createAlbumSongsWithPlayCounts(
-        name: String = ALBUM_NAME,
-        albumArtist: String = "album-artist",
-        songsPlayCount: List<Int> = emptyList(),
-    ): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
-        createSong(
-            name = "song-${index + 1}",
-            albumArtist = albumArtist,
-            album = name,
-            track = index + 1,
-            playCount = playCount,
-        )
-    }
-
-    private fun createAlbum(
-        name: String = ALBUM_NAME,
-        albumArtist: String = "album-artist",
-        artists: List<String> = emptyList(),
-        songCount: Int = 11,
-        duration: Int = 22,
-        year: Int = 2024,
-        playCount: Int = 33,
-        lastSongPlayed: Instant = Instant.fromEpochSeconds(1),
-        lastSongCompleted: Instant = Instant.fromEpochSeconds(1),
-        groupKey: AlbumGroupKey = AlbumGroupKey("group-key", AlbumArtistGroupKey("album-artist-group-key")),
-        mediaProviders: List<MediaProviderType> = emptyList(),
-    ) = Album(
-        name = name,
-        albumArtist = albumArtist,
-        artists = artists,
-        songCount = songCount,
-        duration = duration,
-        year = year,
-        playCount = playCount,
-        lastSongPlayed = lastSongPlayed,
-        lastSongCompleted = lastSongCompleted,
-        groupKey = groupKey,
-        mediaProviders = mediaProviders,
-    )
-
-    private fun createSong(
-        name: String = "song-name",
-        albumArtist: String = "album-artist",
-        album: String = ALBUM_NAME,
-        track: Int = 1,
-        duration: Int = 1,
-        date: LocalDate = LocalDate(2024, 2, 11),
-        playCount: Int = 0,
-        lastPlayed: Instant = Instant.fromEpochSeconds(1),
-        lastCompleted: Instant = Instant.fromEpochSeconds(1),
-        mediaProvider: MediaProviderType = MediaProviderType.Shuttle,
-    ) = Song(
-        id = 1,
-        name = name,
-        albumArtist = albumArtist,
-        artists = emptyList(),
-        album = album,
-        track = track,
-        disc = 1,
-        duration = duration,
-        date = date,
-        genres = emptyList(),
-        path = "/path/to/song",
-        size = 1,
-        mimeType = "ogg",
-        lastModified = Instant.fromEpochSeconds(1),
-        lastPlayed = lastPlayed,
-        lastCompleted = lastCompleted,
-        playCount = playCount,
-        playbackPosition = 1,
-        blacklisted = false,
-        externalId = null,
-        mediaProvider = mediaProvider,
-        replayGainTrack = null,
-        replayGainAlbum = null,
-        lyrics = null,
-        grouping = null,
-        bitRate = null,
-        bitDepth = null,
-        sampleRate = null,
-        channelCount = null,
-    )
 }
