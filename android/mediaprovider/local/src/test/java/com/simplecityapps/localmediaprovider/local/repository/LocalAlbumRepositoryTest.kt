@@ -105,8 +105,10 @@ class LocalAlbumRepositoryTest {
             val inProgressAlbums = awaitItem()
 
             inProgressAlbums.shouldHaveSize(1)
-            inProgressAlbums[0].albumArtist shouldBe ARTIST_NAME
-            inProgressAlbums[0].name shouldBe ALBUM_NAME
+            inProgressAlbums[0].let {
+                it.albumArtist shouldBe ARTIST_NAME
+                it.name shouldBe ALBUM_NAME
+            }
 
             cancelAndIgnoreRemainingEvents()
         }
