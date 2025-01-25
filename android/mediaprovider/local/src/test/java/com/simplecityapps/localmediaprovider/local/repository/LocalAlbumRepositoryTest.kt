@@ -222,7 +222,7 @@ class LocalAlbumRepositoryTest {
     }
 
     @Test
-    fun `createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
+    fun `unit test creation method - createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
             name = ALBUM_NAME,
             albumArtist = ARTIST_NAME,
