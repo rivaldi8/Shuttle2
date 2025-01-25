@@ -50,12 +50,10 @@ class LocalAlbumRepositoryTest {
     }
 
     @Test
-    fun `returns proper albums`() = testScope.runTest {
+    fun `getAlbums - returns proper albums`() = testScope.runTest {
         val song = createSong(
-            name = "song-name",
             albumArtist = "album-artist",
-            album = ALBUM_NAME,
-            track = 1,
+            album = "album-name",
             duration = 1,
             date = LocalDate(2024, 2, 11),
             playCount = 0,
@@ -65,9 +63,9 @@ class LocalAlbumRepositoryTest {
         )
         every { mockSongDataDao.getAll() } returns flowOf(listOf(song))
 
-        val albumFlow = repository.getAlbums(AlbumQuery.All())
+        val albumsFlow = repository.getAlbums(AlbumQuery.All())
 
-        albumFlow.test {
+        albumsFlow.test {
             val albums = awaitItem()
 
             // The output of shouldContainExactly is useless so, check each element
