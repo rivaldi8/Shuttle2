@@ -26,9 +26,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-private const val ARTIST_NAME = "artist-name"
-private const val ALBUM_NAME = "album-name"
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class LocalAlbumRepositoryTest {
     private lateinit var repository: LocalAlbumRepository
@@ -207,22 +204,10 @@ class LocalAlbumRepositoryTest {
         }
     }
 
-    private fun createAlbumSongsWithPlayCounts(
-        name: String = ALBUM_NAME,
-        albumArtist: String = "album-artist",
-        songsPlayCount: List<Int> = emptyList(),
-    ): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
-        createSong(
-            name = "song-${index + 1}",
-            albumArtist = albumArtist,
-            album = name,
-            track = index + 1,
-            playCount = playCount,
-        )
-    }
+    // **** End of LocalAlbumRepositoryTests. Tests for creation function:
 
     @Test
-    fun `unit test creation method - createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
+    fun `unit test creation function - createAlbumSongsWithPlayCounts - works`() = testScope.runTest {
         val albumSongs = createAlbumSongsWithPlayCounts(
             name = ALBUM_NAME,
             albumArtist = ARTIST_NAME,
@@ -249,4 +234,21 @@ class LocalAlbumRepositoryTest {
                 playCount = 22,
             )
     }
+}
+
+private const val ARTIST_NAME = "artist-name"
+private const val ALBUM_NAME = "album-name"
+
+private fun createAlbumSongsWithPlayCounts(
+    name: String = ALBUM_NAME,
+    albumArtist: String = "album-artist",
+    songsPlayCount: List<Int> = emptyList(),
+): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
+    createSong(
+        name = "song-${index + 1}",
+        albumArtist = albumArtist,
+        album = name,
+        track = index + 1,
+        playCount = playCount,
+    )
 }
