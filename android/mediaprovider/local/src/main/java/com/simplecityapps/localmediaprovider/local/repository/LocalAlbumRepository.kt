@@ -5,6 +5,7 @@ import com.simplecityapps.mediaprovider.repository.albums.AlbumQuery
 import com.simplecityapps.mediaprovider.repository.albums.AlbumRepository
 import com.simplecityapps.mediaprovider.repository.albums.comparator
 import com.simplecityapps.shuttle.model.Album
+import com.simplecityapps.shuttle.model.AlbumGroupKey
 import com.simplecityapps.shuttle.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,20 +32,8 @@ class LocalAlbumRepository(
             .map { songs ->
                 songs
                     .groupBy { it.albumGroupKey }
-                    .map { (key, songs) ->
-                        Album(
-                            name = songs.firstOrNull { it.album != null }?.album,
-                            albumArtist = songs.firstOrNull { it.albumArtist != null }?.albumArtist,
-                            artists = songs.flatMap { it.artists }.distinct(),
-                            songCount = songs.size,
-                            duration = songs.sumOf { it.duration },
-                            year = songs.mapNotNull { it.date?.year }.minOrNull(),
-                            playCount = songs.minOfOrNull { it.playCount } ?: 0,
-                            lastSongPlayed = songs.mapNotNull { it.lastPlayed }.maxOrNull(),
-                            lastSongCompleted = songs.mapNotNull { it.lastCompleted }.maxOrNull(),
-                            groupKey = key,
-                            mediaProviders = songs.map { it.mediaProvider }.distinct()
-                        )
+                    .map { (albumGroupKey, songs) ->
+                        createAlbumFromSongs(songs, albumGroupKey)
                     }
             }
             .flowOn(Dispatchers.IO)
@@ -105,20 +94,25 @@ class LocalAlbumRepository(
                         false
                     }
                     .map { (groupingKeys, songs) ->
-                        Album(
-                            name = songs.firstOrNull { it.album != null }?.album,
-                            albumArtist = songs.firstOrNull { it.albumArtist != null }?.albumArtist,
-                            artists = songs.flatMap { it.artists }.distinct(),
-                            songCount = songs.size,
-                            duration = songs.sumOf { it.duration },
-                            year = songs.mapNotNull { it.date?.year }.minOrNull(),
-                            playCount = songs.minOfOrNull { it.playCount } ?: 0,
-                            lastSongPlayed = songs.mapNotNull { it.lastPlayed }.maxOrNull(),
-                            lastSongCompleted = songs.mapNotNull { it.lastCompleted }.maxOrNull(),
-                            groupKey = groupingKeys.second,
-                            mediaProviders = songs.map { it.mediaProvider }.distinct()
-                        )
+                        createAlbumFromSongs(songs, groupingKeys.second)
                     }
             }
     }
+
+    private fun createAlbumFromSongs(
+        songs: List<Song>,
+        albumGroupKey: AlbumGroupKey,
+    ) = Album(
+        name = songs.firstOrNull { it.album != null }?.album,
+        albumArtist = songs.firstOrNull { it.albumArtist != null }?.albumArtist,
+        artists = songs.flatMap { it.artists }.distinct(),
+        songCount = songs.size,
+        duration = songs.sumOf { it.duration },
+        year = songs.mapNotNull { it.date?.year }.minOrNull(),
+        playCount = songs.minOfOrNull { it.playCount } ?: 0,
+        lastSongPlayed = songs.mapNotNull { it.lastPlayed }.maxOrNull(),
+        lastSongCompleted = songs.mapNotNull { it.lastCompleted }.maxOrNull(),
+        groupKey = albumGroupKey,
+        mediaProviders = songs.map { it.mediaProvider }.distinct(),
+    )
 }
