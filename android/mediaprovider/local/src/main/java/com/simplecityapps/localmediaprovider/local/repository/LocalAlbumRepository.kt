@@ -94,6 +94,7 @@ class LocalAlbumRepository(
                     .map { (groupingKeys, songs) ->
                         createAlbumFromSongs(songs, groupingKeys.second)
                     }
+                    .sortedByDescending { it.lastSongPlayed }
             }
     }
 

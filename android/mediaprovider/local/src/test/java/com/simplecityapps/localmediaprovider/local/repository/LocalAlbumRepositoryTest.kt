@@ -116,7 +116,7 @@ class LocalAlbumRepositoryTest {
     }
 
     @Test
-    fun `getInProgressAlbums - returns albums sorted by last played`() = testScope.runTest {
+    fun `getInProgressAlbums - returns albums ordered by most recently played first`() = testScope.runTest {
         // Arrange
         val firstPlayedAlbumName = "first-played-album-name"
         val firstPlayedAlbumSongs = createInProgressAlbumSongs(
