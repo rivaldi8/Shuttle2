@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Before
@@ -109,6 +110,41 @@ class LocalAlbumRepositoryTest {
                 it.albumArtist shouldBe ARTIST_NAME
                 it.name shouldBe ALBUM_NAME
             }
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `getInProgressAlbums - returns albums sorted by last played`() = testScope.runTest {
+        // Arrange
+        val firstPlayedAlbumName = "first-played-album-name"
+        val firstPlayedAlbumSongs = createInProgressAlbumSongs(
+            albumArtist = ARTIST_NAME,
+            name = firstPlayedAlbumName,
+            lastPlayed = Instant.fromEpochMilliseconds(0),
+        )
+
+        val lastPlayedAlbumName = "last-played-album-name"
+        val lastPlayedAlbumSongs = createInProgressAlbumSongs(
+            albumArtist = ARTIST_NAME,
+            name = lastPlayedAlbumName,
+            lastPlayed = Instant.fromEpochMilliseconds(1),
+        )
+
+        every { mockSongDataDao.getAll() } returns
+            flowOf(firstPlayedAlbumSongs + lastPlayedAlbumSongs)
+
+        // Act
+        val inProgressAlbumsFlow = repository.getInProgressAlbums()
+
+        // Assert
+        inProgressAlbumsFlow.test {
+            val inProgressAlbums = awaitItem()
+
+            inProgressAlbums.shouldHaveSize(2)
+            inProgressAlbums[0].name shouldBe lastPlayedAlbumName
+            inProgressAlbums[1].name shouldBe firstPlayedAlbumName
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -240,7 +276,7 @@ private const val ARTIST_NAME = "artist-name"
 private const val ALBUM_NAME = "album-name"
 
 private fun createAlbumSongsWithPlayCounts(
-    name: String = ALBUM_NAME,
+    name: String = "album-name",
     albumArtist: String = "album-artist",
     songsPlayCount: List<Int> = emptyList(),
 ): List<Song> = songsPlayCount.mapIndexed { index, playCount ->
@@ -250,5 +286,30 @@ private fun createAlbumSongsWithPlayCounts(
         album = name,
         track = index + 1,
         playCount = playCount,
+    )
+}
+
+private fun createInProgressAlbumSongs(
+    name: String = "album-name",
+    albumArtist: String = "album-artist",
+    lastPlayed: Instant?,
+): List<Song> {
+    return listOf(
+        createSong(
+            name = "song-1-played",
+            albumArtist = albumArtist,
+            album = name,
+            track = 1,
+            playCount = 1,
+            lastPlayed = lastPlayed,
+        ),
+        createSong(
+            name = "song-2-non-played",
+            albumArtist = albumArtist,
+            album = name,
+            track = 2,
+            playCount = 0,
+            lastPlayed = null,
+        ),
     )
 }

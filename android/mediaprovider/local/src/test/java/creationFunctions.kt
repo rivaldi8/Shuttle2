@@ -14,8 +14,8 @@ fun createSong(
     duration: Int = 1,
     date: LocalDate = LocalDate(2024, 2, 11),
     playCount: Int = 0,
-    lastPlayed: Instant = Instant.fromEpochSeconds(1),
-    lastCompleted: Instant = Instant.fromEpochSeconds(1),
+    lastPlayed: Instant? = Instant.fromEpochSeconds(1),
+    lastCompleted: Instant? = Instant.fromEpochSeconds(1),
     mediaProvider: MediaProviderType = MediaProviderType.Shuttle,
 ) = Song(
     id = 1,
