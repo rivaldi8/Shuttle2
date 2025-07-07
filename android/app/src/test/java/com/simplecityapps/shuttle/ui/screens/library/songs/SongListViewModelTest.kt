@@ -110,7 +110,7 @@ class SongListViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Assert
-        val expectedState = SongListViewModel.ViewState.Ready(songs, emptySet())
+        val expectedState = SongListViewModel.ViewState.Ready(songs, emptySet(), __selectedSortOrder)
         assertEquals(expectedState, viewModel.viewState.value)
     }
 
