@@ -274,7 +274,6 @@ android {
         implementation(libs.firebase.crashlytics)
 
         // Testing
-        testImplementation(libs.mockk)
         androidTestImplementation(libs.androidx.runner)
         androidTestImplementation(libs.androidx.rules)
         androidTestImplementation(libs.androidx.core.ktx)
