@@ -90,7 +90,7 @@ class SongListViewModel @Inject constructor(
         contextualToolbarHelper.toggleSongSelection(song)
     }
 
-    fun play(song: Song, completion: (Result<Boolean>) -> Unit) {
+    private fun play(song: Song, completion: (Result<Boolean>) -> Unit) {
         viewModelScope.launch {
             val songs = viewState.value.let {
                 if (it is ViewState.Ready) it.songs else listOf(song)
