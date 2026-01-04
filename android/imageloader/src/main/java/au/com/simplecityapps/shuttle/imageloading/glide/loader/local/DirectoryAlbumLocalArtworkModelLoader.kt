@@ -1,9 +1,6 @@
 package au.com.simplecityapps.shuttle.imageloading.glide.loader.local
 
 import android.content.Context
-import android.provider.DocumentsContract
-import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import au.com.simplecityapps.shuttle.imageloading.glide.loader.common.AlbumArtworkProvider
 import com.bumptech.glide.load.Options
 import com.bumptech.glide.load.model.ModelLoader
@@ -12,11 +9,9 @@ import com.bumptech.glide.load.model.MultiModelLoaderFactory
 import com.simplecityapps.mediaprovider.repository.songs.SongRepository
 import com.simplecityapps.shuttle.model.Album
 import com.simplecityapps.shuttle.query.SongQuery
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
+import java.io.InputStream
 
 class DirectoryAlbumLocalArtworkModelLoader(
     private val context: Context,
@@ -53,36 +48,8 @@ class DirectoryAlbumLocalArtworkModelLoader(
                 .firstOrNull()
                 ?.firstOrNull()
                 ?.let { song ->
-                    val parentDocumentFile =
-                        if (DocumentsContract.isDocumentUri(context, song.path.toUri())) {
-                            val parent = song.path.substringBeforeLast("%2F", "")
-                            if (parent.isNotEmpty()) {
-                                DocumentFile.fromTreeUri(context, parent.toUri())
-                            } else {
-                                null
-                            }
-                        } else {
-                            File(song.path).parentFile?.let { parent ->
-                                DocumentFile.fromFile(parent)
-                            }
-                        }
-
-                    parentDocumentFile?.listFiles()
-                        ?.filter {
-                            it.type?.startsWith("image") == true &&
-                                it.length() > 1024 &&
-                                pattern.matcher(it.name ?: "").matches()
-                        }
-                        ?.maxByOrNull { it.length() }
-                        ?.let { documentFile ->
-                            // noinspection Recycle. To be closed by the client (LocalArtworkDataFetcher)
-                            context.contentResolver.openInputStream(documentFile.uri)
-                        }
+                    LocalArtworkFinder(context, song.path).find()
                 }
-        }
-
-        companion object {
-            private val pattern by lazy { Pattern.compile("(\\.?(folder|cover|album|albumart|front|artwork)).*\\.(jpg|jpeg|png|webp)", Pattern.CASE_INSENSITIVE) }
         }
     }
 }

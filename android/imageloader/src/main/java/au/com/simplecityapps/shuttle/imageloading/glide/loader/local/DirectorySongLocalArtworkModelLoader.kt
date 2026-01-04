@@ -40,34 +40,7 @@ class DirectorySongLocalArtworkModelLoader(
     ) : SongArtworkProvider(song),
         LocalArtworkProvider {
         override fun getInputStream(): InputStream? {
-            val parentDocumentFile =
-                if (DocumentsContract.isDocumentUri(context, song.path.toUri())) {
-                    val parent = song.path.substringBeforeLast("%2F", "")
-                    if (parent.isNotEmpty()) {
-                        DocumentFile.fromTreeUri(context, parent.toUri())
-                    } else {
-                        null
-                    }
-                } else {
-                    File(song.path).parentFile?.let { parent ->
-                        DocumentFile.fromFile(parent)
-                    }
-                }
-
-            return parentDocumentFile?.listFiles()
-                ?.filter {
-                    it.type?.startsWith("image") == true &&
-                        it.length() > 1024 &&
-                        pattern.matcher(it.name ?: "").matches()
-                }
-                ?.maxByOrNull { it.length() }
-                ?.let { documentFile ->
-                    context.contentResolver.openInputStream(documentFile.uri)
-                }
-        }
-
-        companion object {
-            private val pattern by lazy { Pattern.compile("(\\.?(folder|cover|album|albumart|front|artwork)).*\\.(jpg|jpeg|png|webp)", Pattern.CASE_INSENSITIVE) }
+            return LocalArtworkFinder(context, song.path).find()
         }
     }
 }
