@@ -36,9 +36,12 @@ class LocalArtworkModelLoader : ModelLoader<LocalArtworkProvider, InputStream> {
     class LocalArtworkDataFetcher(
         private val localArtworkProvider: LocalArtworkProvider
     ) : DataFetcher<InputStream> {
+        private var inputStream: InputStream? = null
+
         override fun getDataClass(): Class<InputStream> = InputStream::class.java
 
         override fun cleanup() {
+            inputStream?.close()
         }
 
         override fun getDataSource(): DataSource = DataSource.REMOTE
@@ -50,7 +53,8 @@ class LocalArtworkModelLoader : ModelLoader<LocalArtworkProvider, InputStream> {
             priority: Priority,
             callback: DataFetcher.DataCallback<in InputStream>
         ) {
-            localArtworkProvider.getInputStream()?.let { inputStream ->
+            inputStream = localArtworkProvider.getInputStream()
+            inputStream?.let { inputStream ->
                 callback.onDataReady(inputStream)
             } ?: run {
                 callback.onLoadFailed(GlideException("Local artwork not found (${localArtworkProvider.javaClass.simpleName})"))
