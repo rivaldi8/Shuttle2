@@ -75,6 +75,7 @@ class DirectoryAlbumLocalArtworkModelLoader(
                         }
                         ?.maxByOrNull { it.length() }
                         ?.let { documentFile ->
+                            // noinspection Recycle. To be closed by the client (LocalArtworkDataFetcher)
                             context.contentResolver.openInputStream(documentFile.uri)
                         }
                 }
