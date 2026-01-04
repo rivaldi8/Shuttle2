@@ -1,18 +1,13 @@
 package au.com.simplecityapps.shuttle.imageloading.glide.loader.local
 
 import android.content.Context
-import android.provider.DocumentsContract
-import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import au.com.simplecityapps.shuttle.imageloading.glide.loader.common.SongArtworkProvider
 import com.bumptech.glide.load.Options
 import com.bumptech.glide.load.model.ModelLoader
 import com.bumptech.glide.load.model.ModelLoaderFactory
 import com.bumptech.glide.load.model.MultiModelLoaderFactory
 import com.simplecityapps.shuttle.model.Song
-import java.io.File
 import java.io.InputStream
-import java.util.regex.Pattern
 
 class DirectorySongLocalArtworkModelLoader(
     private val context: Context,
@@ -40,7 +35,7 @@ class DirectorySongLocalArtworkModelLoader(
     ) : SongArtworkProvider(song),
         LocalArtworkProvider {
         override fun getInputStream(): InputStream? {
-            return LocalArtworkFinder(context, song.path).find()
+            return findLocalArtwork(context, song.path)
         }
     }
 }

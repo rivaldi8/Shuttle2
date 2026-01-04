@@ -9,9 +9,9 @@ import com.bumptech.glide.load.model.MultiModelLoaderFactory
 import com.simplecityapps.mediaprovider.repository.songs.SongRepository
 import com.simplecityapps.shuttle.model.Album
 import com.simplecityapps.shuttle.query.SongQuery
+import java.io.InputStream
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
-import java.io.InputStream
 
 class DirectoryAlbumLocalArtworkModelLoader(
     private val context: Context,
@@ -48,7 +48,7 @@ class DirectoryAlbumLocalArtworkModelLoader(
                 .firstOrNull()
                 ?.firstOrNull()
                 ?.let { song ->
-                    LocalArtworkFinder(context, song.path).find()
+                    findLocalArtwork(context, song.path)
                 }
         }
     }
