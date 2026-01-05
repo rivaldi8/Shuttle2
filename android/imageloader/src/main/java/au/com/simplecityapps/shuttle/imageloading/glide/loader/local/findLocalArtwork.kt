@@ -12,7 +12,7 @@ fun findLocalArtwork(
     context: Context,
     path: String,
 ): InputStream? {
-    val pattern by lazy {
+    val standardArtworkPattern by lazy {
         Pattern.compile(
             "(\\.?(folder|cover|album|albumart|front|artwork)).*\\.(jpg|jpeg|png|webp)",
             Pattern.CASE_INSENSITIVE,
@@ -32,15 +32,24 @@ fun findLocalArtwork(
             }
         }
 
-    return parentDocumentFile?.listFiles()
+    val imageFiles = parentDocumentFile?.listFiles()
         ?.filter {
             it.type?.startsWith("image") == true &&
-                it.length() > 1024 &&
-                pattern.matcher(it.name ?: "").matches()
+                it.length() > 1024
         }
-        ?.maxByOrNull { it.length() }
-        ?.let { documentFile ->
-            // noinspection Recycle. To be closed by the client (LocalArtworkDataFetcher)
-            context.contentResolver.openInputStream(documentFile.uri)
-        }
+
+    val standardArtworkFiles = imageFiles?.filter {
+        standardArtworkPattern.matcher(it.name ?: "").matches()
+    }
+
+    // Largest image with standard name, otherwise the largest image with any name
+    val finalArtworkFile = if (standardArtworkFiles?.isNotEmpty() == true) {
+        standardArtworkFiles.maxByOrNull { it.length() }
+    } else {
+        imageFiles?.maxByOrNull { it.length() }
+    }
+
+    return finalArtworkFile?.let { documentFile ->
+        context.contentResolver.openInputStream(documentFile.uri)
+    }
 }
