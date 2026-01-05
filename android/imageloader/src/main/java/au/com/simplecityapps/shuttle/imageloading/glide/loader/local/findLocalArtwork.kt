@@ -8,6 +8,8 @@ import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
 
+private const val ENCODED_SLASH = "%2F"
+
 fun findLocalArtwork(
     context: Context,
     path: String,
@@ -20,7 +22,7 @@ fun findLocalArtwork(
     }
     val parentDocumentFile =
         if (DocumentsContract.isDocumentUri(context, path.toUri())) {
-            val parent = path.substringBeforeLast("%2F", "")
+            val parent = path.substringBeforeLast(ENCODED_SLASH, "")
             if (parent.isNotEmpty()) {
                 DocumentFile.fromTreeUri(context, parent.toUri())
             } else {
