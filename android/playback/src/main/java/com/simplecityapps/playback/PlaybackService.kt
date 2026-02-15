@@ -6,14 +6,18 @@ import android.app.SearchManager
 import android.app.Service
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.support.v4.media.MediaBrowserCompat
+import android.widget.Toast
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
+import com.simplecityapps.ktaglib.KTagLib
+import com.simplecityapps.localmediaprovider.local.provider.taglib.FileScanner
 import com.simplecityapps.playback.androidauto.MediaIdHelper
 import com.simplecityapps.playback.androidauto.PackageValidator
 import com.simplecityapps.playback.audiofocus.AudioFocusHelper
@@ -21,13 +25,18 @@ import com.simplecityapps.playback.mediasession.MediaSessionManager
 import com.simplecityapps.playback.queue.QueueChangeCallback
 import com.simplecityapps.playback.queue.QueueManager
 import com.simplecityapps.playback.queue.QueueWatcher
+import com.simplecityapps.shuttle.model.MediaProviderType
+import com.simplecityapps.shuttle.model.Song
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import timber.log.Timber
+import javax.inject.Inject
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @AndroidEntryPoint
 class PlaybackService :
@@ -57,6 +66,12 @@ class PlaybackService :
 
     @Inject
     lateinit var audioFocusHelper: AudioFocusHelper
+
+    @Inject
+    lateinit var fileScanner: FileScanner
+
+    @Inject
+    lateinit var kTagLib: KTagLib
 
     private var foregroundNotificationHandler: Handler? = null
 
@@ -211,15 +226,74 @@ class PlaybackService :
             ACTION_SKIP_PREV -> playbackManager.skipToPrev()
             ACTION_SKIP_NEXT -> playbackManager.skipToNext(ignoreRepeat = true)
             ACTION_SEARCH -> mediaSessionManager.mediaSession.controller?.transportControls?.playFromSearch(intent.extras?.getString(SearchManager.QUERY), Bundle())
-            Intent.ACTION_VIEW -> {
-                // Handle opening audio files
-                intent.data?.let { uri ->
-                    Timber.v("Handling ACTION_VIEW for URI: $uri")
-                    mediaSessionManager.mediaSession.controller?.transportControls?.playFromUri(uri, Bundle())
+            Intent.ACTION_VIEW -> playAudioFileFromViewIntent(intent)
+        }
+    }
+
+    private fun playAudioFileFromViewIntent(intent: Intent) {
+        val uri = intent.data
+        if (uri == null) {
+            Timber.e("Received view intent without file URI.")
+            return
+        }
+
+        coroutineScope.launch {
+            createSongFromIntentAudioUri(uri)?.let { song ->
+                if (queueManager.setQueue(songs = listOf(song))) {
+                    playbackManager.load { result ->
+                        result.onSuccess { playbackManager.play() }
+                        result.onFailure { error ->
+                            Timber.e(error, "Error playing audio file from view intent.")
+                            Toast.makeText(
+                                this@PlaybackService,
+                                getString(com.simplecityapps.core.R.string.error_playing_intent_song),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
                 }
             }
         }
     }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun createSongFromIntentAudioUri(uri: Uri): Song? = fileScanner
+        .getAudioFile(this@PlaybackService, kTagLib, uri)?.let {
+            val date = if (it.year != null) {
+                LocalDate.parse("${it.year}-01-01")
+            } else {
+                null
+            }
+
+            Song(
+                id = 0,
+                name = it.title,
+                albumArtist = it.albumArtist,
+                album = it.album,
+                artists = it.artists,
+                track = it.track,
+                disc = it.disc,
+                duration = it.duration ?: 0,
+                date = date,
+                genres = it.genres,
+                path = it.path,
+                size = it.size,
+                mimeType = it.mimeType,
+                lastModified = Instant.fromEpochMilliseconds(it.lastModified),
+                lastPlayed = null,
+                lastCompleted = null,
+                playCount = 0,
+                playbackPosition = 0,
+                blacklisted = false,
+                mediaProvider = MediaProviderType.Shuttle,
+                lyrics = it.lyrics,
+                grouping = null,
+                bitRate = it.bitRate,
+                bitDepth = it.bitDepth,
+                sampleRate = it.sampleRate,
+                channelCount = it.channelCount,
+            )
+        }
 
     private fun postDelayedShutdown(delay: Long = 15 * 1000L) {
         Timber.v("postDelayedShutdown(delay: $delay)")

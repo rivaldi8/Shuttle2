@@ -23,6 +23,12 @@ android {
     buildFeatures.buildConfig true
 }
 
+kotlin {
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -34,6 +40,7 @@ dependencies {
     implementation project(path: ':android:mediaprovider:emby')
     implementation project(path: ':android:mediaprovider:jellyfin')
     implementation project(path: ':android:mediaprovider:plex')
+    implementation project(path: ':android:mediaprovider:local')
 
     // Shuttle Image Loader
     implementation project(path: ':android:imageloader')
@@ -62,5 +69,9 @@ dependencies {
     implementation libs.moshi.kotlin
     ksp libs.moshi.kotlinCodegen
 
+    implementation(libs.kotlinx.datetime)
+
     implementation(project(':android:data'))
+
+    implementation(libs.timusus.ktaglib)
 }
