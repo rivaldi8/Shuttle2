@@ -132,11 +132,10 @@ class MainActivity : AppCompatActivity() {
         if (intent?.action == Intent.ACTION_VIEW && intent.data != null) {
             ContextCompat.startForegroundService(
                 this,
-                Intent(this, PlaybackService::class.java).apply {
-                    action = Intent.ACTION_VIEW
-                    data = intent.data
-                    type = intent.type
-                }
+                (intent.clone() as Intent).setClass(
+                    this,
+                    PlaybackService::class.java
+                )
             )
         }
     }
