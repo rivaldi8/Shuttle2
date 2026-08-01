@@ -8,6 +8,8 @@
     <string name="settings_menu_dsp">DSP</string>
     <!-- The title of 'settings' in the bottom settings menu -->
     <string name="settings_menu_settings">Settings</string>
+    <!-- The title of 'Export database' in the bottom settings menu -->
+    <string name="settings_menu_export_database">Export Database</string>
     <!-- Title of the dialog shown when the user changes a setting which requires the app to be restarted.-->
     <string name="settings_crash_reporting_dialog_requires_restart">Requires Restart</string>
     <!-- Description of dialog shown when user changes the crash reporting opt-in setting. Explaining that the user needs to restart the app. -->

@@ -7,7 +7,8 @@ enum class SettingsMenuItem {
     Shuffle,
     SleepTimer,
     Dsp,
-    Settings
+    Settings,
+    ExportDatabase
     ;
 
     val icon: Int
@@ -17,6 +18,7 @@ enum class SettingsMenuItem {
                 SleepTimer -> R.drawable.ic_sleep_black_24dp
                 Dsp -> R.drawable.ic_equalizer_black_24dp
                 Settings -> R.drawable.ic_settings_black_24dp
+                ExportDatabase -> R.drawable.ic_content_copy
             }
         }
 
@@ -28,6 +30,7 @@ enum class SettingsMenuItem {
                 Shuffle -> R.string.settings_menu_shuffle_all
                 Dsp -> R.string.settings_menu_dsp
                 Settings -> R.string.settings_menu_settings
+                ExportDatabase -> R.string.settings_menu_export_database
             }
         }
 }
