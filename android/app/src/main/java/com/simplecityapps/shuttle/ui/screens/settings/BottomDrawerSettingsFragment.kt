@@ -37,7 +37,11 @@ class BottomDrawerSettingsFragment :
     private var adapter: RecyclerAdapter by autoCleared()
 
     private val exportDatabaseLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
-        uri?.let { exportDatabase(it) }
+        if (uri == null) {
+            dismiss()
+        } else {
+            exportDatabase(uri)
+        }
     }
 
     override fun onCreateView(
@@ -100,14 +104,20 @@ class BottomDrawerSettingsFragment :
     private val settingsItemClickListener =
         object : SettingsViewBinder.Listener {
             override fun onMenuItemClicked(settingsItem: SettingsMenuItem) {
-                dismiss()
-
                 when (settingsItem) {
-                    SettingsMenuItem.Shuffle -> presenter.shuffleAll()
-                    SettingsMenuItem.SleepTimer -> SleepTimerDialogFragment.newInstance().show(requireFragmentManager())
-                    SettingsMenuItem.Dsp -> findNavController().navigate(R.id.action_bottomSheetFragment_to_equalizerFragment)
-                    SettingsMenuItem.Settings -> findNavController().navigate(R.id.action_bottomSheetFragment_to_settingsFragment)
-                    SettingsMenuItem.ExportDatabase -> exportDatabaseLauncher.launch("song.db")
+                    SettingsMenuItem.ExportDatabase -> {
+                        exportDatabaseLauncher.launch("song.db")
+                    }
+                    else -> {
+                        dismiss()
+                        when (settingsItem) {
+                            SettingsMenuItem.Shuffle -> presenter.shuffleAll()
+                            SettingsMenuItem.SleepTimer -> SleepTimerDialogFragment.newInstance().show(requireFragmentManager())
+                            SettingsMenuItem.Dsp -> findNavController().navigate(R.id.action_bottomSheetFragment_to_equalizerFragment)
+                            SettingsMenuItem.Settings -> findNavController().navigate(R.id.action_bottomSheetFragment_to_settingsFragment)
+                            else -> {}
+                        }
+                    }
                 }
             }
         }
@@ -142,10 +152,12 @@ class BottomDrawerSettingsFragment :
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()
+                    dismiss()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    dismiss()
                 }
             }
         }
