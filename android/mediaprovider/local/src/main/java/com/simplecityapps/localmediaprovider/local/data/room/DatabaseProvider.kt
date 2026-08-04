@@ -22,11 +22,13 @@ import com.simplecityapps.localmediaprovider.local.data.room.migrations.MIGRATIO
 import com.simplecityapps.localmediaprovider.local.data.room.migrations.MIGRATION_38_39
 import com.simplecityapps.localmediaprovider.local.data.room.migrations.MIGRATION_39_40
 
+const val DATABASE_NAME = "song.db"
+
 class DatabaseProvider(
     private val context: Context
 ) {
     val database: MediaDatabase by lazy {
-        Room.databaseBuilder(context, MediaDatabase::class.java, "song.db")
+        Room.databaseBuilder(context, MediaDatabase::class.java, DATABASE_NAME)
             .addMigrations(
                 MIGRATION_23_24,
                 MIGRATION_24_25,

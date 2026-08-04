@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
-import com.simplecityapps.shuttle.io.exportDatabase
+import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
 import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
@@ -125,7 +125,7 @@ class BottomDrawerSettingsFragment :
     private fun exportDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                exportDatabase(requireContext(), "song.db", uri)
+                exportDatabase(requireContext(), uri)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()

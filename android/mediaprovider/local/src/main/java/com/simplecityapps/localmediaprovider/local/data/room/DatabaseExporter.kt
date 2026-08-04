@@ -1,4 +1,4 @@
-package com.simplecityapps.shuttle.io
+package com.simplecityapps.localmediaprovider.local.data.room
 
 import android.content.Context
 import android.net.Uri
@@ -14,14 +14,14 @@ import java.io.IOException
  * @throws IOException if an error occurs during the copy process.
  */
 @Throws(IOException::class)
-fun exportDatabase(context: Context, databaseName: String, destinationUri: Uri) {
-    val dbFile = context.getDatabasePath(databaseName)
+fun exportDatabase(context: Context, destinationUri: Uri) {
+    val dbFile = context.getDatabasePath(DATABASE_NAME)
     if (!dbFile.exists()) {
-        throw FileNotFoundException("Database file $databaseName not found")
+        throw FileNotFoundException("Database file $DATABASE_NAME not found")
     }
 
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempFile = File.createTempFile(databaseName, ".tmp", context.cacheDir)
+    val tempFile = File.createTempFile(DATABASE_NAME, ".tmp", context.cacheDir)
     try {
         dbFile.inputStream().use { input ->
             tempFile.outputStream().use { output ->
