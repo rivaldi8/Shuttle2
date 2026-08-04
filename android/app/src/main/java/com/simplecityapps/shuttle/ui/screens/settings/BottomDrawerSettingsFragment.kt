@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
+import com.simplecityapps.shuttle.io.exportDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
 import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
@@ -23,7 +24,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -125,30 +125,7 @@ class BottomDrawerSettingsFragment :
     private fun exportDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val dbFile = requireContext().getDatabasePath("song.db")
-                if (!dbFile.exists()) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "Database file not found", Toast.LENGTH_SHORT).show()
-                    }
-                    return@launch
-                }
-
-                // Step 1: Copy to a temporary file
-                val tempFile = File.createTempFile("song_backup", ".db", requireContext().cacheDir)
-                dbFile.inputStream().use { input ->
-                    tempFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-
-                // Step 2: Copy the temporary file to the final destination
-                requireContext().contentResolver.openOutputStream(uri)?.use { output ->
-                    tempFile.inputStream().use { input ->
-                        input.copyTo(output)
-                    }
-                }
-
-                tempFile.delete()
+                exportDatabase(requireContext(), "song.db", uri)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()
