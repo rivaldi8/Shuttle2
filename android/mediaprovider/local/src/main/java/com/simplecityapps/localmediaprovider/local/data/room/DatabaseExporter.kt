@@ -12,7 +12,6 @@ import java.io.IOException
  * @throws FileNotFoundException if the database file does not exist.
  * @throws IOException if an error occurs during the copy process.
  */
-@Throws(IOException::class)
 fun exportDatabase(context: Context, destinationUri: Uri) {
     val dbFile = context.getDatabasePath(DATABASE_NAME)
     if (!dbFile.exists()) {
