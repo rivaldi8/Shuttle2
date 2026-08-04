@@ -7,8 +7,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 
 /**
- * Exports the database [databaseName] to the provided [destinationUri].
- * The export is done in two steps: first to a temporary file in the local filesystem, then to the destination.
+ * Exports the app's database to the provided [destinationUri].
  *
  * @throws FileNotFoundException if the database file does not exist.
  * @throws IOException if an error occurs during the copy process.
