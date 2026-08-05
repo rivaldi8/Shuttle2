@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
+import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
@@ -33,6 +34,8 @@ class BottomDrawerSettingsFragment :
     // Lifecycle
 
     @Inject lateinit var presenter: BottomDrawerSettingsPresenter
+
+    @Inject lateinit var database: MediaDatabase
 
     private var adapter: RecyclerAdapter by autoCleared()
 
@@ -125,7 +128,7 @@ class BottomDrawerSettingsFragment :
     private fun exportDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                exportDatabase(requireContext(), uri)
+                exportDatabase(database, requireContext(), uri)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()
