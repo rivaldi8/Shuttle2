@@ -15,10 +15,8 @@ import java.io.IOException
  * @throws IOException if an error occurs during the copy process.
  */
 fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri) {
-    // Perform checkpoint to merge WAL file into the main database file
-    database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
-        cursor.moveToFirst()
-    }
+    // Perform checkpoint to merge WAL files into the main database file
+    walCheckpoint(database)
 
     val databaseName = database.openHelper.databaseName!!
     val dbFile = context.getDatabasePath(databaseName)
@@ -45,5 +43,11 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
         if (tempFile.exists()) {
             tempFile.delete()
         }
+    }
+}
+
+private fun walCheckpoint(database: RoomDatabase) {
+    database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
+        cursor.moveToFirst()
     }
 }
