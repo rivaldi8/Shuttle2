@@ -20,13 +20,14 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
         cursor.moveToFirst()
     }
 
-    val dbFile = context.getDatabasePath(DATABASE_NAME)
+    val databaseName = database.openHelper.databaseName!!
+    val dbFile = context.getDatabasePath(databaseName)
     if (!dbFile.exists()) {
-        throw FileNotFoundException("Database file $DATABASE_NAME not found")
+        throw FileNotFoundException("Database file '$databaseName' not found")
     }
 
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempFile = File.createTempFile(DATABASE_NAME, ".tmp", context.cacheDir)
+    val tempFile = File.createTempFile("${databaseName}_export", ".tmp", context.cacheDir)
     try {
         dbFile.inputStream().use { input ->
             tempFile.outputStream().use { output ->
