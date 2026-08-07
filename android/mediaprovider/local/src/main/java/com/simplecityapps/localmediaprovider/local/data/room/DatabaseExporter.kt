@@ -7,6 +7,8 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Exports the app's database to the provided [destinationUri].
@@ -27,21 +29,23 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     walCheckpoint(database)
 
     try {
-        dbFile.inputStream().use { input ->
-            tempFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
+        copyStreams(dbFile.inputStream(), tempFile.outputStream())
 
         // Step 2: Copy the temporary file to the final destination
-        context.contentResolver.openOutputStream(destinationUri)?.use { output ->
-            tempFile.inputStream().use { input ->
-                input.copyTo(output)
-            }
-        } ?: throw IOException("Could not open output stream for URI: $destinationUri")
+        val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
+            ?: throw IOException("Could not open output stream for URI: $destinationUri")
+        copyStreams(tempFile.inputStream(), finalDestinationStream)
     } finally {
         if (tempFile.exists()) {
             tempFile.delete()
+        }
+    }
+}
+
+private fun copyStreams(source: InputStream, destination: OutputStream) {
+    source.use { input ->
+        destination.use { output ->
+            input.copyTo(output)
         }
     }
 }
