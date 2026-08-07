@@ -18,8 +18,8 @@ import java.io.OutputStream
  */
 fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri) {
     val databaseName = database.openHelper.databaseName!!
-    val dbFile = context.getDatabasePath(databaseName)
-    if (!dbFile.exists()) {
+    val databaseFile = context.getDatabasePath(databaseName)
+    if (!databaseFile.exists()) {
         throw FileNotFoundException("Database file '$databaseName' not found")
     }
 
@@ -29,7 +29,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     walCheckpoint(database)
 
     try {
-        copyStreams(dbFile.inputStream(), tempFile.outputStream())
+        copyStreams(databaseFile.inputStream(), tempFile.outputStream())
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
