@@ -15,9 +15,6 @@ import java.io.IOException
  * @throws IOException if an error occurs during the copy process.
  */
 fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri) {
-    // Perform checkpoint to merge WAL files into the main database file
-    walCheckpoint(database)
-
     val databaseName = database.openHelper.databaseName!!
     val dbFile = context.getDatabasePath(databaseName)
     if (!dbFile.exists()) {
@@ -26,6 +23,9 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
 
     // Step 1: Copy to a temporary file in the local filesystem
     val tempFile = File.createTempFile("${databaseName}_export", ".tmp", context.cacheDir)
+    // Perform checkpoint to merge WAL files into the main database file
+    walCheckpoint(database)
+
     try {
         dbFile.inputStream().use { input ->
             tempFile.outputStream().use { output ->
