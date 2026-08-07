@@ -36,9 +36,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
         copyStreams(tempFile.inputStream(), finalDestinationStream)
     } finally {
-        if (tempFile.exists()) {
-            tempFile.delete()
-        }
+        tempFile.delete()
     }
 }
 
