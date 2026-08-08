@@ -24,7 +24,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     }
 
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempFile = createTempFile(databaseName, context)
+    val tempFile = createTempFile(context)
     // Perform checkpoint to merge WAL files into the main database file
     walCheckpoint(database)
 
@@ -40,8 +40,8 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     }
 }
 
-private fun createTempFile(databaseName: String, context: Context): File {
-    return File.createTempFile("${databaseName}_export", ".tmp", context.cacheDir)
+private fun createTempFile(context: Context): File {
+    return File.createTempFile("database_export", ".tmp", context.cacheDir)
 }
 
 private fun copyStreams(source: InputStream, destination: OutputStream) {
