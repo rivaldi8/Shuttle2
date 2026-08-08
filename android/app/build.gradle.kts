@@ -72,6 +72,7 @@ android {
     flavorDimensions += "version"
     productFlavors {
         create("devel") {
+            isDefault = true
             resValue("string", "app_name", "S2 (Dev)")
         }
         create("alexm") {
