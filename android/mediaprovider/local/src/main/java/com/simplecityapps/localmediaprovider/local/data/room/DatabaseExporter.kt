@@ -59,9 +59,15 @@ fun restoreDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
 
     // Step 2: Replace the existing database file
     database.close()
-    databaseFile.delete()
+    deleteDatabaseAndWalFiles(databaseFile)
 
     tempFile.renameTo(databaseFile)
+}
+
+private fun deleteDatabaseAndWalFiles(databaseFile: File) {
+    File(databaseFile.path + "-wal").delete()
+    File(databaseFile.path + "-shm").delete()
+    databaseFile.delete()
 }
 
 private fun createTempFileIn(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
