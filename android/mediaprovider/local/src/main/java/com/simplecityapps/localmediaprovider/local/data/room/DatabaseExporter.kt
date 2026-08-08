@@ -64,9 +64,7 @@ fun restoreDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
     }
 }
 
-private fun createTempFileIn(directory: File): File {
-    return File.createTempFile("database_export", ".tmp", directory)
-}
+private fun createTempFileIn(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
 
 private fun copyStream(source: InputStream, destination: OutputStream) {
     source.use { input ->
