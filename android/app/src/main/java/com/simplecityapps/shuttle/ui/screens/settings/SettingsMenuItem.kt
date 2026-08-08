@@ -8,7 +8,8 @@ enum class SettingsMenuItem {
     SleepTimer,
     Dsp,
     Settings,
-    ExportDatabase
+    ExportDatabase,
+    RestoreDatabase
     ;
 
     val icon: Int
@@ -19,6 +20,7 @@ enum class SettingsMenuItem {
                 Dsp -> R.drawable.ic_equalizer_black_24dp
                 Settings -> R.drawable.ic_settings_black_24dp
                 ExportDatabase -> R.drawable.ic_content_copy
+                RestoreDatabase -> R.drawable.ic_folder_open_black_24dp
             }
         }
 
@@ -31,6 +33,7 @@ enum class SettingsMenuItem {
                 Dsp -> R.string.settings_menu_dsp
                 Settings -> R.string.settings_menu_settings
                 ExportDatabase -> R.string.settings_menu_export_database
+                RestoreDatabase -> R.string.settings_menu_restore_database
             }
         }
 }

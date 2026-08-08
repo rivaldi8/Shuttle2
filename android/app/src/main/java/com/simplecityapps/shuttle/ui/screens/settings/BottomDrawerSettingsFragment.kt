@@ -18,6 +18,7 @@ import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
+import com.simplecityapps.localmediaprovider.local.data.room.restoreDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
 import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
@@ -44,6 +45,14 @@ class BottomDrawerSettingsFragment :
             dismiss()
         } else {
             exportDatabase(uri)
+        }
+    }
+
+    private val restoreDatabaseLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) {
+            dismiss()
+        } else {
+            restoreDatabase(uri)
         }
     }
 
@@ -111,6 +120,9 @@ class BottomDrawerSettingsFragment :
                     SettingsMenuItem.ExportDatabase -> {
                         exportDatabaseLauncher.launch("song.db")
                     }
+                    SettingsMenuItem.RestoreDatabase -> {
+                        restoreDatabaseLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
+                    }
                     else -> {
                         dismiss()
                         when (settingsItem) {
@@ -137,6 +149,24 @@ class BottomDrawerSettingsFragment :
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    private fun restoreDatabase(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                restoreDatabase(database, requireContext(), uri)
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Database restored successfully. Please restart the app.", Toast.LENGTH_LONG).show()
+                    dismiss()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
                     dismiss()
                 }
             }
