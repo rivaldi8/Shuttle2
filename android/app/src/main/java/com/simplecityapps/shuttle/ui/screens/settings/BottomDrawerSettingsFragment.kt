@@ -1,5 +1,7 @@
 package com.simplecityapps.shuttle.ui.screens.settings
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.system.exitProcess
+
 
 @AndroidEntryPoint
 class BottomDrawerSettingsFragment :
@@ -162,7 +166,7 @@ class BottomDrawerSettingsFragment :
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database restored successfully. Please restart the app.", Toast.LENGTH_LONG).show()
-                    dismiss()
+                    restartApp()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -171,6 +175,19 @@ class BottomDrawerSettingsFragment :
                 }
             }
         }
+    }
+
+    fun restartApp() {
+        val context = requireContext()
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        // Required for API 34 and later
+        // https://developer.android.com/about/versions/14/behavior-changes-14#safer-intents
+        mainIntent.setPackage(context.packageName)
+        context.startActivity(mainIntent)
+        exitProcess(0)
     }
 
     // BottomDrawerSettingsContract.View Implementation
