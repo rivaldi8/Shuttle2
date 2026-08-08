@@ -29,12 +29,12 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     walCheckpoint(database)
 
     try {
-        copyStreams(databaseFile.inputStream(), tempFile.outputStream())
+        copyStream(databaseFile.inputStream(), tempFile.outputStream())
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
-        copyStreams(tempFile.inputStream(), finalDestinationStream)
+        copyStream(tempFile.inputStream(), finalDestinationStream)
     } finally {
         tempFile.delete()
     }
@@ -44,7 +44,7 @@ private fun createTempFile(context: Context): File {
     return File.createTempFile("database_export", ".tmp", context.cacheDir)
 }
 
-private fun copyStreams(source: InputStream, destination: OutputStream) {
+private fun copyStream(source: InputStream, destination: OutputStream) {
     source.use { input ->
         destination.use { output ->
             input.copyTo(output)
