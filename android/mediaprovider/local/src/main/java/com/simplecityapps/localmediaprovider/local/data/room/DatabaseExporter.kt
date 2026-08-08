@@ -48,20 +48,20 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
 fun restoreDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
     val databaseName = database.openHelper.databaseName!!
     val databaseFile = context.getDatabasePath(databaseName)
+    val databaseDirectory = databaseFile.parentFile
+        ?: throw IOException("Database without directory")
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
-    val tempFile = createTempFileIn(context.cacheDir)
-    try {
-        val sourceStream = context.contentResolver.openInputStream(sourceUri)
-            ?: throw IOException("Could not open input stream for URI: $sourceUri")
-        copyStream(sourceStream, tempFile.outputStream())
+    val tempFile = createTempFileIn(databaseDirectory)
+    val sourceStream = context.contentResolver.openInputStream(sourceUri)
+        ?: throw IOException("Could not open input stream for URI: $sourceUri")
+    copyStream(sourceStream, tempFile.outputStream())
 
-        // Step 2: Overwrite the existing database file with the temporary file
-        database.close()
-        copyStream(tempFile.inputStream(), databaseFile.outputStream())
-    } finally {
-        tempFile.delete()
-    }
+    // Step 2: Replace the existing database file
+    database.close()
+    databaseFile.delete()
+
+    tempFile.renameTo(databaseFile)
 }
 
 private fun createTempFileIn(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
