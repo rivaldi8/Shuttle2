@@ -1,6 +1,7 @@
 package com.simplecityapps.localmediaprovider.local.data.room
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SimpleSQLiteQuery
@@ -30,6 +31,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
 
     try {
         copyStream(databaseFile.inputStream(), tempFile.outputStream())
+        verifyDatabaseIntegrity(tempFile)
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
@@ -37,6 +39,15 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
         copyStream(tempFile.inputStream(), finalDestinationStream)
     } finally {
         tempFile.delete()
+    }
+}
+
+fun verifyDatabaseIntegrity(databaseFile: File) {
+    val database = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+    database.isDatabaseIntegrityOk
+
+    if (!database.isDatabaseIntegrityOk) {
+        throw IOException("Database integrity check failed")
     }
 }
 
