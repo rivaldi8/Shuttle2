@@ -45,15 +45,6 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
     }
 }
 
-fun verifyDatabaseIntegrity(databaseFile: File) {
-    val database = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-    database.isDatabaseIntegrityOk
-
-    if (!database.isDatabaseIntegrityOk) {
-        throw IOException("Database integrity check failed")
-    }
-}
-
 /**
  * Restores the app's database from the provided [sourceUri].
  *
@@ -97,6 +88,15 @@ private fun copyStream(source: InputStream, destination: OutputStream) {
 private fun walCheckpoint(database: RoomDatabase) {
     database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
         cursor.moveToFirst()
+    }
+}
+
+fun verifyDatabaseIntegrity(databaseFile: File) {
+    val database = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+    database.isDatabaseIntegrityOk
+
+    if (!database.isDatabaseIntegrityOk) {
+        throw IOException("Database integrity check failed")
     }
 }
 
