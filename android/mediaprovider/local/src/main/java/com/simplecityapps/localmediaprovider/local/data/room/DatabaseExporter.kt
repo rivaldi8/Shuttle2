@@ -62,6 +62,8 @@ fun restoreDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
         ?: throw IOException("Could not open input stream for URI: $sourceUri")
     copyStream(sourceStream, tempFile.outputStream())
 
+    verifyDatabaseToImport(tempFile, database)
+
     // Step 2: Replace the existing database file
     database.close()
     deleteDatabaseAndWalFiles(databaseFile)
@@ -88,6 +90,21 @@ private fun copyStream(source: InputStream, destination: OutputStream) {
 private fun walCheckpoint(database: RoomDatabase) {
     database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
         cursor.moveToFirst()
+    }
+}
+
+fun verifyDatabaseToImport(databaseFile: File, database: RoomDatabase) {
+    verifyDatabaseIntegrity(databaseFile)
+
+    // FIXME: Code duplication
+    SQLiteDatabase.openDatabase(
+        databaseFile.absolutePath,
+        null,
+        SQLiteDatabase.OPEN_READONLY
+    ).use { databaseToImport ->
+        if (databaseToImport.version > database.openHelper.readableDatabase.version) {
+            throw IOException("Trying to import a database with a newer version")
+        }
     }
 }
 
