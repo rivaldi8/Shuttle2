@@ -28,6 +28,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -122,7 +123,8 @@ class BottomDrawerSettingsFragment :
             override fun onMenuItemClicked(settingsItem: SettingsMenuItem) {
                 when (settingsItem) {
                     SettingsMenuItem.ExportDatabase -> {
-                        exportDatabaseLauncher.launch("song.db")
+                        val date = LocalDate.now()
+                        exportDatabaseLauncher.launch("song-$date.db")
                     }
                     SettingsMenuItem.RestoreDatabase -> {
                         restoreDatabaseLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
