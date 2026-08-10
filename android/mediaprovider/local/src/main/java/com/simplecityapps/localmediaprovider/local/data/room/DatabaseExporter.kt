@@ -54,31 +54,6 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
     }
 }
 
-private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
-    val size = context.contentResolver.query(
-        uri,
-        arrayOf(OpenableColumns.SIZE),
-        null,
-        null,
-        null,
-    )?.use { cursor ->
-        if (cursor.moveToFirst()) {
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
-                cursor.getLong(sizeIndex)
-            } else {
-                null
-            }
-        } else {
-            null
-        }
-    }
-
-    if (size != expectedSize) {
-        throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
-    }
-}
-
 /**
  * Restores the app's database from the provided [sourceUri].
  *
@@ -124,3 +99,29 @@ private fun walCheckpoint(database: RoomDatabase) {
         cursor.moveToFirst()
     }
 }
+
+private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
+    val size = context.contentResolver.query(
+        uri,
+        arrayOf(OpenableColumns.SIZE),
+        null,
+        null,
+        null,
+    )?.use { cursor ->
+        if (cursor.moveToFirst()) {
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                cursor.getLong(sizeIndex)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    }
+
+    if (size != expectedSize) {
+        throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
+    }
+}
+
