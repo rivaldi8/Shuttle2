@@ -55,7 +55,13 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
 }
 
 private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
-    val size = context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+    val size = context.contentResolver.query(
+        uri,
+        arrayOf(OpenableColumns.SIZE),
+        null,
+        null,
+        null,
+    )?.use { cursor ->
         if (cursor.moveToFirst()) {
             val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
             if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
@@ -68,7 +74,7 @@ private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
         }
     }
 
-    if (size != null && size != expectedSize) {
+    if (size != expectedSize) {
         throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
     }
 }
