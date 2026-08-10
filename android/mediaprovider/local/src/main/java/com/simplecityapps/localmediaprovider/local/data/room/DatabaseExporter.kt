@@ -92,11 +92,16 @@ private fun walCheckpoint(database: RoomDatabase) {
 }
 
 fun verifyDatabaseIntegrity(databaseFile: File) {
-    val database = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-    database.isDatabaseIntegrityOk
+    SQLiteDatabase.openDatabase(
+        databaseFile.absolutePath,
+        null,
+        SQLiteDatabase.OPEN_READONLY
+    ).use { database ->
+        database.isDatabaseIntegrityOk
 
-    if (!database.isDatabaseIntegrityOk) {
-        throw IOException("Database integrity check failed")
+        if (!database.isDatabaseIntegrityOk) {
+            throw IOException("Database integrity check failed")
+        }
     }
 }
 
