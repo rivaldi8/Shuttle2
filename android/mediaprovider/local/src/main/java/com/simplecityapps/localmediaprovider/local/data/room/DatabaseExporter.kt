@@ -3,6 +3,7 @@ package com.simplecityapps.localmediaprovider.local.data.room
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SimpleSQLiteQuery
 import java.io.File
@@ -37,6 +38,8 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
         copyStream(tempFile.inputStream(), finalDestinationStream)
+
+        verifyFileSize(context, tempFile.length(), destinationUri)
     } finally {
         tempFile.delete()
     }
@@ -48,6 +51,25 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
 
     if (!database.isDatabaseIntegrityOk) {
         throw IOException("Database integrity check failed")
+    }
+}
+
+private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
+    val size = context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) {
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                cursor.getLong(sizeIndex)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    }
+
+    if (size != null && size != expectedSize) {
+        throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
     }
 }
 
