@@ -27,7 +27,7 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
     // Step 1: Copy to a temporary file in the local filesystem
     val tempFile = createTemporaryFile(context.cacheDir)
     // Perform checkpoint to merge WAL files into the main database file
-    performWalCheckpoint(database)
+    database.performWalCheckpoint()
 
     try {
         copyStream(databaseFile.inputStream(), tempFile.outputStream())
@@ -88,8 +88,8 @@ private fun copyStream(source: InputStream, destination: OutputStream) {
     }
 }
 
-private fun performWalCheckpoint(database: RoomDatabase) {
-    database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
+private fun RoomDatabase.performWalCheckpoint() {
+    query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
         cursor.moveToFirst()
     }
 }
