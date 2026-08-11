@@ -19,18 +19,13 @@ import java.io.OutputStream
  * @throws IOException if an error occurs during the copy process.
  */
 fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
-    val databaseFile = database.getDatabaseFile(context)
-    if (!databaseFile.exists()) {
-        throw FileNotFoundException("Database file '${databaseFile.name}' not found")
-    }
-
     // Step 1: Copy to a temporary file in the local filesystem
     val tempFile = createTemporaryFile(context.cacheDir)
     // Perform checkpoint to merge WAL files into the main database file
     database.performWalCheckpoint()
 
     try {
-        copyStream(databaseFile.inputStream(), tempFile.outputStream())
+        copyStream(database.getInputStream(context), tempFile.outputStream())
         verifyDatabaseIntegrity(tempFile)
 
         // Step 2: Copy the temporary file to the final destination
@@ -50,7 +45,7 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
  * @throws IOException if an error occurs during the copy process.
  */
 fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
-    val databaseFile = database.getDatabaseFile(context)
+    val databaseFile = database.getFile(context)
     val databaseDirectory = databaseFile.parentFile
         ?: throw IOException("Database directory not found")
 
@@ -72,7 +67,16 @@ fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
 
 // Private Helpers
 
-private fun RoomDatabase.getDatabaseFile(context: Context): File {
+private fun RoomDatabase.getInputStream(context: Context): InputStream {
+    val databaseFile = getFile(context)
+    if (!databaseFile.exists()) {
+        throw FileNotFoundException("Database file '${databaseFile.name}' not found")
+    }
+
+    return databaseFile.inputStream()
+}
+
+private fun RoomDatabase.getFile(context: Context): File {
     val name = openHelper.databaseName ?: throw IOException("Database name not found")
     return context.getDatabasePath(name)
 }
