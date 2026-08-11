@@ -39,7 +39,11 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
         copyStream(tempFile.inputStream(), finalDestinationStream)
 
-        verifyFileSize(context, destinationUri, tempFile.length())
+        verifyFileSize(
+            context = context,
+            fileUri = destinationUri,
+            expectedSize = tempFile.length(),
+        )
     } finally {
         tempFile.delete()
     }
@@ -122,9 +126,9 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
     }
 }
 
-private fun verifyFileSize(context: Context, uri: Uri, expectedSize: Long) {
+private fun verifyFileSize(context: Context, fileUri: Uri, expectedSize: Long) {
     val size = context.contentResolver.query(
-        uri,
+        fileUri,
         arrayOf(OpenableColumns.SIZE),
         null,
         null,
@@ -146,4 +150,3 @@ private fun verifyFileSize(context: Context, uri: Uri, expectedSize: Long) {
         throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
     }
 }
-
