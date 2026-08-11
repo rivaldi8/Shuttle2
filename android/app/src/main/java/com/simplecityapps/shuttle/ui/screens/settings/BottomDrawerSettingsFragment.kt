@@ -145,7 +145,7 @@ class BottomDrawerSettingsFragment :
     private fun exportDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                exportDatabase(database, requireContext(), uri)
+                exportDatabase(requireContext(), database, uri)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()
@@ -163,7 +163,7 @@ class BottomDrawerSettingsFragment :
     private fun restoreDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                importDatabase(database, requireContext(), uri)
+                importDatabase(requireContext(), uri, database)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database restored successfully. Please restart the app.", Toast.LENGTH_LONG).show()

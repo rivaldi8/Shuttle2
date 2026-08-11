@@ -18,7 +18,7 @@ import java.io.OutputStream
  * @throws FileNotFoundException if the database file does not exist.
  * @throws IOException if an error occurs during the copy process.
  */
-fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri) {
+fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
     val databaseName = database.openHelper.databaseName!!
     val databaseFile = context.getDatabasePath(databaseName)
     if (!databaseFile.exists()) {
@@ -39,7 +39,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
         copyStream(tempFile.inputStream(), finalDestinationStream)
 
-        verifyFileSize(context, tempFile.length(), destinationUri)
+        verifyFileSize(context, destinationUri, tempFile.length())
     } finally {
         tempFile.delete()
     }
@@ -50,7 +50,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
  *
  * @throws IOException if an error occurs during the copy process.
  */
-fun importDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
+fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
     val databaseName = database.openHelper.databaseName!!
     val databaseFile = context.getDatabasePath(databaseName)
     val databaseDirectory = databaseFile.parentFile
@@ -122,7 +122,7 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
     }
 }
 
-private fun verifyFileSize(context: Context, expectedSize: Long, uri: Uri) {
+private fun verifyFileSize(context: Context, uri: Uri, expectedSize: Long) {
     val size = context.contentResolver.query(
         uri,
         arrayOf(OpenableColumns.SIZE),
