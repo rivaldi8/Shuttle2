@@ -19,16 +19,15 @@ import java.io.OutputStream
  * @throws IOException if an error occurs during the copy process.
  */
 fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
-    val databaseName = database.openHelper.databaseName!!
-    val databaseFile = context.getDatabasePath(databaseName)
+    val databaseFile = database.getDatabaseFile(context)
     if (!databaseFile.exists()) {
-        throw FileNotFoundException("Database file '$databaseName' not found")
+        throw FileNotFoundException("Database file '${databaseFile.name}' not found")
     }
 
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempFile = createTempFileIn(context.cacheDir)
+    val tempFile = createTemporaryFile(context.cacheDir)
     // Perform checkpoint to merge WAL files into the main database file
-    walCheckpoint(database)
+    performWalCheckpoint(database)
 
     try {
         copyStream(databaseFile.inputStream(), tempFile.outputStream())
@@ -39,11 +38,7 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
         copyStream(tempFile.inputStream(), finalDestinationStream)
 
-        verifyFileSize(
-            context = context,
-            fileUri = destinationUri,
-            expectedSize = tempFile.length(),
-        )
+        verifyExportedSize(context, destinationUri, expectedSize = tempFile.length())
     } finally {
         tempFile.delete()
     }
@@ -55,33 +50,35 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
  * @throws IOException if an error occurs during the copy process.
  */
 fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
-    val databaseName = database.openHelper.databaseName!!
-    val databaseFile = context.getDatabasePath(databaseName)
+    val databaseFile = database.getDatabaseFile(context)
     val databaseDirectory = databaseFile.parentFile
-        ?: throw IOException("Database without directory")
+        ?: throw IOException("Database directory not found")
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
-    val tempFile = createTempFileIn(databaseDirectory)
+    val tempFile = createTemporaryFile(databaseDirectory)
     val sourceStream = context.contentResolver.openInputStream(sourceUri)
         ?: throw IOException("Could not open input stream for URI: $sourceUri")
     copyStream(sourceStream, tempFile.outputStream())
 
-    verifyDatabaseToImport(tempFile, database)
+    validateDatabaseForImport(tempFile, database)
 
     // Step 2: Replace the existing database file
     database.close()
     deleteDatabaseAndWalFiles(databaseFile)
 
-    tempFile.renameTo(databaseFile)
+    if (!tempFile.renameTo(databaseFile)) {
+        throw IOException("Failed to rename restored database file to ${databaseFile.absolutePath}")
+    }
 }
 
-private fun deleteDatabaseAndWalFiles(databaseFile: File) {
-    File(databaseFile.path + "-wal").delete()
-    File(databaseFile.path + "-shm").delete()
-    databaseFile.delete()
+// Private Helpers
+
+private fun RoomDatabase.getDatabaseFile(context: Context): File {
+    val name = openHelper.databaseName ?: throw IOException("Database name not found")
+    return context.getDatabasePath(name)
 }
 
-private fun createTempFileIn(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
+private fun createTemporaryFile(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
 
 private fun copyStream(source: InputStream, destination: OutputStream) {
     source.use { input ->
@@ -91,23 +88,27 @@ private fun copyStream(source: InputStream, destination: OutputStream) {
     }
 }
 
-private fun walCheckpoint(database: RoomDatabase) {
+private fun performWalCheckpoint(database: RoomDatabase) {
     database.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(FULL)")).use { cursor ->
         cursor.moveToFirst()
     }
 }
 
-fun verifyDatabaseToImport(databaseFile: File, database: RoomDatabase) {
-    verifyDatabaseIntegrity(databaseFile)
+private fun deleteDatabaseAndWalFiles(databaseFile: File) {
+    File(databaseFile.path + "-wal").delete()
+    File(databaseFile.path + "-shm").delete()
+    databaseFile.delete()
+}
 
-    // FIXME: Code duplication
-    SQLiteDatabase.openDatabase(
-        databaseFile.absolutePath,
-        null,
-        SQLiteDatabase.OPEN_READONLY
-    ).use { databaseToImport ->
-        if (databaseToImport.version > database.openHelper.readableDatabase.version) {
-            throw IOException("Trying to import a database with a newer version")
+private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
+    SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+        if (!db.isDatabaseIntegrityOk) {
+            throw IOException("Imported database integrity check failed")
+        }
+        
+        val currentVersion = currentDatabase.openHelper.readableDatabase.version
+        if (db.version > currentVersion) {
+            throw IOException("Cannot import a database with a newer version (Imported: ${db.version}, Current: $currentVersion)")
         }
     }
 }
@@ -126,7 +127,7 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
     }
 }
 
-private fun verifyFileSize(context: Context, fileUri: Uri, expectedSize: Long) {
+private fun verifyExportedSize(context: Context, fileUri: Uri, expectedSize: Long) {
     val size = context.contentResolver.query(
         fileUri,
         arrayOf(OpenableColumns.SIZE),
