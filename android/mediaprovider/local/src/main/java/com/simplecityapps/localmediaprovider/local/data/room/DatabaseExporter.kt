@@ -25,7 +25,10 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
     database.performWalCheckpoint()
 
     try {
-        copyStream(database.getInputStream(context), tempDatabaseExportFile.outputStream())
+        copyStream(
+            database.getInputStream(context),
+            tempDatabaseExportFile.outputStream()
+        )
         verifyDatabaseIntegrity(tempDatabaseExportFile)
 
         // Step 2: Copy the temporary file to the final destination
