@@ -63,8 +63,7 @@ fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
     validateDatabaseForImport(tempFile, database)
 
     // Step 2: Replace the existing database file
-    database.close()
-    deleteDatabaseAndWalFiles(databaseFile)
+    database.closeAndDelete()
 
     if (!tempFile.renameTo(databaseFile)) {
         throw IOException("Failed to rename restored database file to ${databaseFile.absolutePath}")
@@ -94,10 +93,15 @@ private fun RoomDatabase.performWalCheckpoint() {
     }
 }
 
-private fun deleteDatabaseAndWalFiles(databaseFile: File) {
-    File(databaseFile.path + "-wal").delete()
-    File(databaseFile.path + "-shm").delete()
-    databaseFile.delete()
+private fun RoomDatabase.closeAndDelete() {
+    val databasePath = openHelper.writableDatabase.path
+        ?: throw IOException("Database not found")
+
+    close()
+
+    File(databasePath).delete()
+    File(databasePath + "-wal").delete()
+    File(databasePath + "-shm").delete()
 }
 
 private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
