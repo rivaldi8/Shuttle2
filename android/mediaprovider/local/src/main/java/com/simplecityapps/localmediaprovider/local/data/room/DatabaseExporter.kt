@@ -20,22 +20,22 @@ import java.io.OutputStream
  */
 fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempFile = createTemporaryFile(context.cacheDir)
+    val tempDatabaseExportFile = createTemporaryFile(context.cacheDir)
     // Perform checkpoint to merge WAL files into the main database file
     database.performWalCheckpoint()
 
     try {
-        copyStream(database.getInputStream(context), tempFile.outputStream())
-        verifyDatabaseIntegrity(tempFile)
+        copyStream(database.getInputStream(context), tempDatabaseExportFile.outputStream())
+        verifyDatabaseIntegrity(tempDatabaseExportFile)
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
             ?: throw IOException("Could not open output stream for URI: $destinationUri")
-        copyStream(tempFile.inputStream(), finalDestinationStream)
+        copyStream(tempDatabaseExportFile.inputStream(), finalDestinationStream)
 
-        verifyExportedSize(context, destinationUri, expectedSize = tempFile.length())
+        verifyExportedSize(context, destinationUri, expectedSize = tempDatabaseExportFile.length())
     } finally {
-        tempFile.delete()
+        tempDatabaseExportFile.delete()
     }
 }
 
@@ -50,17 +50,17 @@ fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
         ?: throw IOException("Database directory not found")
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
-    val tempFile = createTemporaryFile(databaseDirectory)
+    val tempDatabaseImportFile = createTemporaryFile(databaseDirectory)
     val sourceStream = context.contentResolver.openInputStream(sourceUri)
         ?: throw IOException("Could not open input stream for URI: $sourceUri")
-    copyStream(sourceStream, tempFile.outputStream())
+    copyStream(sourceStream, tempDatabaseImportFile.outputStream())
 
-    validateDatabaseForImport(tempFile, database)
+    validateDatabaseForImport(tempDatabaseImportFile, database)
 
     // Step 2: Replace the existing database file
     database.closeAndDelete()
 
-    if (!tempFile.renameTo(databaseFile)) {
+    if (!tempDatabaseImportFile.renameTo(databaseFile)) {
         throw IOException("Failed to rename restored database file to ${databaseFile.absolutePath}")
     }
 }
