@@ -50,7 +50,7 @@ fun exportDatabase(database: RoomDatabase, context: Context, destinationUri: Uri
  *
  * @throws IOException if an error occurs during the copy process.
  */
-fun restoreDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
+fun importDatabase(database: RoomDatabase, context: Context, sourceUri: Uri) {
     val databaseName = database.openHelper.databaseName!!
     val databaseFile = context.getDatabasePath(databaseName)
     val databaseDirectory = databaseFile.parentFile

@@ -1,6 +1,5 @@
 package com.simplecityapps.shuttle.ui.screens.settings
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -20,7 +19,7 @@ import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.restoreDatabase
+import com.simplecityapps.localmediaprovider.local.data.room.importDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
 import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
@@ -164,7 +163,7 @@ class BottomDrawerSettingsFragment :
     private fun restoreDatabase(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                restoreDatabase(database, requireContext(), uri)
+                importDatabase(database, requireContext(), uri)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Database restored successfully. Please restart the app.", Toast.LENGTH_LONG).show()
