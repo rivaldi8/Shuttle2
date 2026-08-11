@@ -104,8 +104,8 @@ private fun RoomDatabase.closeAndDelete() {
     close()
 
     File(databasePath).delete()
-    File(databasePath + "-wal").delete()
-    File(databasePath + "-shm").delete()
+    File("$databasePath-wal").delete()
+    File("$databasePath-shm").delete()
 }
 
 private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
@@ -113,7 +113,7 @@ private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomD
         if (!db.isDatabaseIntegrityOk) {
             throw IOException("Imported database integrity check failed")
         }
-        
+
         val currentVersion = currentDatabase.openHelper.readableDatabase.version
         if (db.version > currentVersion) {
             throw IOException("Cannot import a database with a newer version (Imported: ${db.version}, Current: $currentVersion)")
