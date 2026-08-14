@@ -116,7 +116,7 @@ private fun RoomDatabase.closeAndDelete() {
 }
 
 private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
-    SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+    openSQLiteDatabase(databaseFile).use { db ->
         if (!db.isDatabaseIntegrityOk) {
             throw IOException("Imported database integrity check failed")
         }
@@ -128,12 +128,8 @@ private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomD
     }
 }
 
-fun verifyDatabaseIntegrity(databaseFile: File) {
-    SQLiteDatabase.openDatabase(
-        databaseFile.absolutePath,
-        null,
-        SQLiteDatabase.OPEN_READONLY
-    ).use { database ->
+private fun verifyDatabaseIntegrity(databaseFile: File) {
+    openSQLiteDatabase(databaseFile).use { database ->
         database.isDatabaseIntegrityOk
 
         if (!database.isDatabaseIntegrityOk) {
@@ -141,6 +137,8 @@ fun verifyDatabaseIntegrity(databaseFile: File) {
         }
     }
 }
+
+private fun openSQLiteDatabase(databaseFile: File): SQLiteDatabase = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
 
 private fun verifyExportedSize(context: Context, fileUri: Uri, expectedSize: Long) {
     val size = context.contentResolver.query(
