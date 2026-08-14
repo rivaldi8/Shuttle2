@@ -48,8 +48,7 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
  * @throws IOException if an error occurs during the copy process.
  */
 fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
-    val databaseFile = database.getFile(context)
-    val databaseDirectory = databaseFile.parentFile
+    val databaseDirectory = database.getDirectory(context)
         ?: throw IOException("Database directory not found")
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
@@ -63,8 +62,8 @@ fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
     // Step 2: Replace the existing database file
     database.closeAndDelete()
 
-    if (!tempDatabaseImportFile.renameTo(databaseFile)) {
-        throw IOException("Failed to rename restored database file to ${databaseFile.absolutePath}")
+    if (!tempDatabaseImportFile.renameTo(database.getFile(context))) {
+        throw IOException("Failed to rename restored database file")
     }
 }
 
@@ -77,6 +76,11 @@ private fun RoomDatabase.getInputStream(context: Context): InputStream {
     }
 
     return databaseFile.inputStream()
+}
+
+private fun RoomDatabase.getDirectory(context: Context): File? {
+    val databaseFile = getFile(context)
+    return databaseFile.parentFile
 }
 
 private fun RoomDatabase.getFile(context: Context): File {
