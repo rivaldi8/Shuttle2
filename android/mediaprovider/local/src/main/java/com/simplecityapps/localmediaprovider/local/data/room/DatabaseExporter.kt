@@ -21,7 +21,7 @@ import java.io.OutputStream
 fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
     // Step 1: Copy to a temporary file in the local filesystem
     val tempDatabaseExportFile = createTemporaryFile(context.cacheDir)
-    // Perform checkpoint to merge WAL files into the main database file
+    // Merge changes from auxiliary Write-Ahead Log files into the main database file
     database.performWalCheckpoint()
 
     try {
