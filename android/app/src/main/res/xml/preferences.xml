@@ -39,6 +39,12 @@
         app:key="pref_screen_playlist" />
 
     <Preference
+        android:title="@string/pref_category_title_backup_restore"
+        app:icon="@drawable/ic_outline_sync_24"
+        app:iconSpaceReserved="false"
+        app:key="pref_screen_backup_restore" />
+
+    <Preference
         android:title="@string/pref_category_title_app_info"
         app:icon="@drawable/ic_outline_info_24"
         app:iconSpaceReserved="false"

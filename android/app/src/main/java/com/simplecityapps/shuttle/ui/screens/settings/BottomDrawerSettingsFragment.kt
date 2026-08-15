@@ -1,13 +1,10 @@
 package com.simplecityapps.shuttle.ui.screens.settings
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.NavigationRes
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
@@ -17,19 +14,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simplecityapps.adapter.RecyclerAdapter
 import com.simplecityapps.shuttle.R
-import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.importDatabase
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.common.error.userDescription
 import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.LocalDate
 import javax.inject.Inject
-import kotlin.system.exitProcess
 
 
 @AndroidEntryPoint
@@ -40,25 +29,7 @@ class BottomDrawerSettingsFragment :
 
     @Inject lateinit var presenter: BottomDrawerSettingsPresenter
 
-    @Inject lateinit var database: MediaDatabase
-
     private var adapter: RecyclerAdapter by autoCleared()
-
-    private val exportDatabaseLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
-        if (uri == null) {
-            dismiss()
-        } else {
-            exportDatabase(uri)
-        }
-    }
-
-    private val restoreDatabaseLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) {
-            dismiss()
-        } else {
-            restoreDatabase(uri)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -120,76 +91,15 @@ class BottomDrawerSettingsFragment :
     private val settingsItemClickListener =
         object : SettingsViewBinder.Listener {
             override fun onMenuItemClicked(settingsItem: SettingsMenuItem) {
+                dismiss()
                 when (settingsItem) {
-                    SettingsMenuItem.ExportDatabase -> {
-                        val date = LocalDate.now()
-                        exportDatabaseLauncher.launch("song-$date.db")
-                    }
-                    SettingsMenuItem.RestoreDatabase -> {
-                        restoreDatabaseLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
-                    }
-                    else -> {
-                        dismiss()
-                        when (settingsItem) {
-                            SettingsMenuItem.Shuffle -> presenter.shuffleAll()
-                            SettingsMenuItem.SleepTimer -> SleepTimerDialogFragment.newInstance().show(requireFragmentManager())
-                            SettingsMenuItem.Dsp -> findNavController().navigate(R.id.action_bottomSheetFragment_to_equalizerFragment)
-                            SettingsMenuItem.Settings -> findNavController().navigate(R.id.action_bottomSheetFragment_to_settingsFragment)
-                            else -> {}
-                        }
-                    }
+                    SettingsMenuItem.Shuffle -> presenter.shuffleAll()
+                    SettingsMenuItem.SleepTimer -> SleepTimerDialogFragment.newInstance().show(requireFragmentManager())
+                    SettingsMenuItem.Dsp -> findNavController().navigate(R.id.action_bottomSheetFragment_to_equalizerFragment)
+                    SettingsMenuItem.Settings -> findNavController().navigate(R.id.action_bottomSheetFragment_to_settingsFragment)
                 }
             }
         }
-
-    private fun exportDatabase(uri: Uri) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                exportDatabase(requireContext(), database, uri)
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Database exported successfully", Toast.LENGTH_SHORT).show()
-                    dismiss()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    dismiss()
-                }
-            }
-        }
-    }
-
-    private fun restoreDatabase(uri: Uri) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                importDatabase(requireContext(), uri, database)
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Database restored successfully. Please restart the app.", Toast.LENGTH_LONG).show()
-                    restartApp()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    dismiss()
-                }
-            }
-        }
-    }
-
-    fun restartApp() {
-        val context = requireContext()
-        val packageManager = context.packageManager
-        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
-        val componentName = intent!!.component
-        val mainIntent = Intent.makeRestartActivityTask(componentName)
-        // Required for API 34 and later
-        // https://developer.android.com/about/versions/14/behavior-changes-14#safer-intents
-        mainIntent.setPackage(context.packageName)
-        context.startActivity(mainIntent)
-        exitProcess(0)
-    }
 
     // BottomDrawerSettingsContract.View Implementation
 

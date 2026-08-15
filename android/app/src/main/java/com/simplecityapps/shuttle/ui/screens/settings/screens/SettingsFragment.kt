@@ -52,6 +52,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findNavController().navigate(R.id.playlistPreferenceFragment)
             true
         }
+        preferenceScreen.findPreference<Preference>("pref_screen_backup_restore")?.setOnPreferenceClickListener {
+            findNavController().navigate(R.id.backupRestoreFragment)
+            true
+        }
         preferenceScreen.findPreference<Preference>("pref_screen_app_info")?.setOnPreferenceClickListener {
             findNavController().navigate(R.id.appInfoPreferenceFragment)
             true

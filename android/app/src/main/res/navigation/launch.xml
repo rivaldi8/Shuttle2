@@ -95,6 +95,12 @@
         tools:layout="@layout/fragment_settings" />
 
     <fragment
+        android:id="@+id/backupRestoreFragment"
+        android:name="com.simplecityapps.shuttle.ui.screens.settings.screens.BackupRestoreFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
         android:id="@+id/privacyPreferenceFragment"
         android:name="com.simplecityapps.shuttle.ui.screens.settings.screens.PrivacyPreferenceFragment"
         android:label="SettingsFragment"

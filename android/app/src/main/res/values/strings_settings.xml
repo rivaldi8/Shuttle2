@@ -56,6 +56,16 @@
     <string name="pref_category_title_playlists">Playlists</string>
     <!-- Settings: Title for shangelog related settings -->
     <string name="pref_category_title_changelog">Changelog</string>
+    <!-- Settings: Title for backup and restore related settings -->
+    <string name="pref_category_title_backup_restore">Backup &amp; Restore</string>
+    <!-- Message shown when the database has been successfully exported -->
+    <string name="settings_export_success">Database exported successfully</string>
+    <!-- Message shown when the database export failed -->
+    <string name="settings_export_failed">Export failed: %1$s</string>
+    <!-- Message shown when the database has been successfully restored -->
+    <string name="settings_restore_success">Database restored successfully. Please restart the app.</string>
+    <!-- Message shown when the database restore failed -->
+    <string name="settings_restore_failed">Restore failed: %1$s</string>
     <!-- Settings: Title for app info related settings -->
     <string name="pref_category_title_app_info">App Info</string>
     <!-- Settings: Title for privacy related settings -->
