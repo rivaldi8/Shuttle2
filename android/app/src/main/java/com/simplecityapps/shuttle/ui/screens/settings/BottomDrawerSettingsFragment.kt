@@ -20,7 +20,6 @@ import com.simplecityapps.shuttle.ui.screens.sleeptimer.SleepTimerDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-
 @AndroidEntryPoint
 class BottomDrawerSettingsFragment :
     BottomSheetDialogFragment(),
@@ -92,6 +91,7 @@ class BottomDrawerSettingsFragment :
         object : SettingsViewBinder.Listener {
             override fun onMenuItemClicked(settingsItem: SettingsMenuItem) {
                 dismiss()
+
                 when (settingsItem) {
                     SettingsMenuItem.Shuffle -> presenter.shuffleAll()
                     SettingsMenuItem.SleepTimer -> SleepTimerDialogFragment.newInstance().show(requireFragmentManager())
