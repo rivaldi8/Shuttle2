@@ -79,7 +79,7 @@ class BackupRestoreFragment : Fragment() {
                 BackupRestoreScreen(
                     onExportClick = {
                         val today = LocalDate.now()
-                        exportDatabaseLauncher.launch("song-$today.db")
+                        exportDatabaseLauncher.launch("s2-backup-$today.db")
                     },
                     onRestoreClick = {
                         restoreDatabaseLauncher.launch(
