@@ -33,10 +33,14 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
-            ?: throw IOException("Could not open output stream for URI: $destinationUri")
+            ?: throw BackupRestoreError.ExportError.IO(IOException("Could not open output stream for URI: $destinationUri"))
         copyStream(tempDatabaseExportFile.inputStream(), finalDestinationStream)
 
         verifyExportedSize(context, destinationUri, expectedSize = tempDatabaseExportFile.length())
+    } catch (e: BackupRestoreError) {
+        throw e
+    } catch (e: Exception) {
+        throw BackupRestoreError.ExportError.IO(e)
     } finally {
         tempDatabaseExportFile.delete()
     }
@@ -49,21 +53,29 @@ fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
  */
 fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
     val databaseDirectory = database.getDirectory(context)
-        ?: throw IOException("Database directory not found")
+        ?: throw BackupRestoreError.ImportError.IO(IOException("Database directory not found"))
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
     val tempDatabaseImportFile = createTemporaryFile(databaseDirectory)
-    val sourceStream = context.contentResolver.openInputStream(sourceUri)
-        ?: throw IOException("Could not open input stream for URI: $sourceUri")
-    copyStream(sourceStream, tempDatabaseImportFile.outputStream())
+    try {
+        val sourceStream = context.contentResolver.openInputStream(sourceUri)
+            ?: throw BackupRestoreError.ImportError.IO(IOException("Could not open input stream for URI: $sourceUri"))
+        copyStream(sourceStream, tempDatabaseImportFile.outputStream())
 
-    validateDatabaseForImport(tempDatabaseImportFile, database)
+        validateDatabaseForImport(tempDatabaseImportFile, database)
 
-    // Step 2: Replace the existing database file
-    database.closeAndDelete()
+        // Step 2: Replace the existing database file
+        database.closeAndDelete()
 
-    if (!tempDatabaseImportFile.renameTo(database.getFile(context))) {
-        throw IOException("Failed to rename restored database file")
+        if (!tempDatabaseImportFile.renameTo(database.getFile(context))) {
+            throw BackupRestoreError.ImportError.IO(IOException("Failed to rename restored database file"))
+        }
+    } catch (e: BackupRestoreError) {
+        tempDatabaseImportFile.delete()
+        throw e
+    } catch (e: Exception) {
+        tempDatabaseImportFile.delete()
+        throw BackupRestoreError.ImportError.IO(e)
     }
 }
 
@@ -84,7 +96,7 @@ private fun RoomDatabase.getDirectory(context: Context): File? {
 }
 
 private fun RoomDatabase.getFile(context: Context): File {
-    val name = openHelper.databaseName ?: throw IOException("Database name not found")
+    val name = openHelper.databaseName ?: throw BackupRestoreError.ExportError.IO(IOException("Database name not found"))
     return context.getDatabasePath(name)
 }
 
@@ -106,7 +118,7 @@ private fun RoomDatabase.performWalCheckpoint() {
 
 private fun RoomDatabase.closeAndDelete() {
     val databasePath = openHelper.writableDatabase.path
-        ?: throw IOException("Database not found")
+        ?: throw BackupRestoreError.ImportError.IO(IOException("Database not found"))
 
     close()
 
@@ -118,22 +130,20 @@ private fun RoomDatabase.closeAndDelete() {
 private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
     openSQLiteDatabase(databaseFile).use { db ->
         if (!db.isDatabaseIntegrityOk) {
-            throw IOException("Imported database integrity check failed")
+            throw BackupRestoreError.ImportError.IntegrityCheckFailed()
         }
 
         val currentVersion = currentDatabase.openHelper.readableDatabase.version
         if (db.version > currentVersion) {
-            throw IOException("Cannot import a database with a newer version (Imported: ${db.version}, Current: $currentVersion)")
+            throw BackupRestoreError.ImportError.VersionMismatch(imported = db.version, current = currentVersion)
         }
     }
 }
 
 private fun verifyDatabaseIntegrity(databaseFile: File) {
     openSQLiteDatabase(databaseFile).use { database ->
-        database.isDatabaseIntegrityOk
-
         if (!database.isDatabaseIntegrityOk) {
-            throw IOException("Database integrity check failed")
+            throw BackupRestoreError.ExportError.IntegrityCheckFailed()
         }
     }
 }
@@ -161,6 +171,6 @@ private fun verifyExportedSize(context: Context, fileUri: Uri, expectedSize: Lon
     }
 
     if (size != expectedSize) {
-        throw IOException("Exported file size mismatch: expected $expectedSize, got $size")
+        throw BackupRestoreError.ExportError.SizeMismatch(expected = expectedSize, actual = size ?: 0L)
     }
 }

@@ -28,19 +28,17 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.importDatabase
+import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.system.exitProcess
@@ -48,8 +46,7 @@ import kotlin.system.exitProcess
 @AndroidEntryPoint
 class BackupRestoreFragment : Fragment() {
 
-    @Inject
-    lateinit var database: MediaDatabase
+    private val viewModel: BackupRestoreViewModel by viewModels()
 
     @Inject
     lateinit var preferenceManager: GeneralPreferenceManager
@@ -63,7 +60,36 @@ class BackupRestoreFragment : Fragment() {
     private val restoreDatabaseLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        uri?.let { restoreDatabase(it) }
+        uri?.let { viewModel.restoreDatabase(it) }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel.uiState
+            .onEach { state ->
+                when (state) {
+                    is BackupRestoreUiState.ExportSuccess -> {
+                        Toast.makeText(requireContext(), R.string.settings_export_success, Toast.LENGTH_SHORT).show()
+                        viewModel.resetState()
+                    }
+                    is BackupRestoreUiState.RestoreSuccess -> {
+                        Toast.makeText(requireContext(), R.string.settings_restore_success, Toast.LENGTH_LONG).show()
+                        restartApp()
+                    }
+                    is BackupRestoreUiState.Error -> {
+                        val message = when (val error = state.error) {
+                            is BackupRestoreError.ImportError.VersionMismatch -> getString(R.string.settings_restore_failed, "Newer database version (Imported: ${error.imported}, Current: ${error.current})")
+                            is BackupRestoreError.ImportError.IntegrityCheckFailed, is BackupRestoreError.ExportError.IntegrityCheckFailed -> getString(R.string.settings_restore_failed, "Database integrity check failed")
+                            else -> getString(R.string.settings_restore_failed, state.error.message)
+                        }
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                        viewModel.resetState()
+                    }
+                    else -> {}
+                }
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     override fun onCreateView(
@@ -97,34 +123,7 @@ class BackupRestoreFragment : Fragment() {
     }
 
     private fun exportDatabase(uri: Uri) {
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                exportDatabase(requireContext(), database, uri)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), R.string.settings_export_success, Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), getString(R.string.settings_export_failed, e.message), Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun restoreDatabase(uri: Uri) {
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                importDatabase(requireContext(), uri, database)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), R.string.settings_restore_success, Toast.LENGTH_LONG).show()
-                    restartApp()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), getString(R.string.settings_restore_failed, e.message), Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        viewModel.exportDatabase(uri)
     }
 
     private fun restartApp() {
