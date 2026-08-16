@@ -38,12 +38,12 @@ import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.time.LocalDate
-import javax.inject.Inject
-import kotlin.system.exitProcess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import javax.inject.Inject
+import kotlin.system.exitProcess
 
 @AndroidEntryPoint
 class BackupRestoreFragment : Fragment() {
@@ -55,7 +55,7 @@ class BackupRestoreFragment : Fragment() {
     lateinit var preferenceManager: GeneralPreferenceManager
 
     private val exportDatabaseLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ActivityResultContracts.CreateDocument("application/x-sqlite3"),
     ) { uri ->
         uri?.let { exportDatabase(it) }
     }
@@ -84,8 +84,8 @@ class BackupRestoreFragment : Fragment() {
                     onRestoreClick = {
                         restoreDatabaseLauncher.launch(
                             arrayOf(
-                                "application/octet-stream",
                                 "application/x-sqlite3",
+                                "application/octet-stream",
                                 "*/*",
                             ),
                         )
