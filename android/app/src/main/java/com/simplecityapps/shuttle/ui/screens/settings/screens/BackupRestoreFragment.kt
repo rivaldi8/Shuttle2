@@ -38,12 +38,12 @@ import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.system.exitProcess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class BackupRestoreFragment : Fragment() {
@@ -54,36 +54,44 @@ class BackupRestoreFragment : Fragment() {
     @Inject
     lateinit var preferenceManager: GeneralPreferenceManager
 
-    private val exportDatabaseLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
+    private val exportDatabaseLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri ->
         uri?.let { exportDatabase(it) }
     }
 
-    private val restoreDatabaseLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    private val restoreDatabaseLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
         uri?.let { restoreDatabase(it) }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                val theme by preferenceManager.theme(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
-                val accent by preferenceManager.accent(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
+        savedInstanceState: Bundle?,
+    ): View = ComposeView(requireContext()).apply {
+        setContent {
+            val theme by preferenceManager.theme(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
+            val accent by preferenceManager.accent(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
 
-                AppTheme(theme = theme, accent = accent) {
-                    BackupRestoreScreen(
-                        onBackClick = { findNavController().popBackStack() },
-                        onExportClick = {
-                            val date = LocalDate.now()
-                            exportDatabaseLauncher.launch("song-$date.db")
-                        },
-                        onRestoreClick = {
-                            restoreDatabaseLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
-                        }
-                    )
-                }
+            AppTheme(theme = theme, accent = accent) {
+                BackupRestoreScreen(
+                    onExportClick = {
+                        val today = LocalDate.now()
+                        exportDatabaseLauncher.launch("song-$today.db")
+                    },
+                    onRestoreClick = {
+                        restoreDatabaseLauncher.launch(
+                            arrayOf(
+                                "application/octet-stream",
+                                "application/x-sqlite3",
+                                "*/*",
+                            ),
+                        )
+                    },
+                    onBackClick = { findNavController().popBackStack() },
+                )
             }
         }
     }
@@ -134,10 +142,10 @@ class BackupRestoreFragment : Fragment() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackupRestoreScreen(
-    onBackClick: () -> Unit,
     onExportClick: () -> Unit,
     onRestoreClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
@@ -148,7 +156,7 @@ fun BackupRestoreScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = null,
                         )
                     }
                 }
@@ -158,27 +166,27 @@ fun BackupRestoreScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             ListItem(
                 headlineContent = { Text(stringResource(id = R.string.settings_menu_export_database)) },
                 leadingContent = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_content_copy),
-                        contentDescription = null
+                        contentDescription = null,
                     )
                 },
-                modifier = Modifier.clickable { onExportClick() }
+                modifier = Modifier.clickable { onExportClick() },
             )
             ListItem(
                 headlineContent = { Text(stringResource(id = R.string.settings_menu_restore_database)) },
                 leadingContent = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_folder_open_black_24dp),
-                        contentDescription = null
+                        contentDescription = null,
                     )
                 },
-                modifier = Modifier.clickable { onRestoreClick() }
+                modifier = Modifier.clickable { onRestoreClick() },
             )
         }
     }
