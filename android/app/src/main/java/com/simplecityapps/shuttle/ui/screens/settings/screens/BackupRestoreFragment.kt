@@ -1,7 +1,6 @@
 package com.simplecityapps.shuttle.ui.screens.settings.screens
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -54,7 +53,9 @@ class BackupRestoreFragment : Fragment() {
     private val exportDatabaseLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/x-sqlite3"),
     ) { uri ->
-        uri?.let { exportDatabase(it) }
+        uri?.let {
+            viewModel.exportDatabase(it)
+        }
     }
 
     private val restoreDatabaseLauncher = registerForActivityResult(
@@ -120,10 +121,6 @@ class BackupRestoreFragment : Fragment() {
                 )
             }
         }
-    }
-
-    private fun exportDatabase(uri: Uri) {
-        viewModel.exportDatabase(uri)
     }
 
     private fun restartApp() {
