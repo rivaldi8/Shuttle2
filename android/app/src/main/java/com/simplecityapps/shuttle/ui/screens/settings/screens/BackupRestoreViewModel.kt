@@ -38,7 +38,7 @@ class BackupRestoreViewModel @Inject constructor(
                 reportError(e)
                 _uiState.value = BackupRestoreUiState.Error(e)
             } catch (e: Exception) {
-                val wrappedError = BackupRestoreError.ExportError.IO(e)
+                val wrappedError = BackupRestoreError.IO(e)
                 reportError(wrappedError)
                 _uiState.value = BackupRestoreUiState.Error(wrappedError)
             }
@@ -55,7 +55,7 @@ class BackupRestoreViewModel @Inject constructor(
                 reportError(e)
                 _uiState.value = BackupRestoreUiState.Error(e)
             } catch (e: Exception) {
-                val wrappedError = BackupRestoreError.ImportError.IO(e)
+                val wrappedError = BackupRestoreError.IO(e)
                 reportError(wrappedError)
                 _uiState.value = BackupRestoreUiState.Error(wrappedError)
             }
@@ -71,11 +71,11 @@ class BackupRestoreViewModel @Inject constructor(
             recordException(error)
             setCustomKey("error_type", error.javaClass.simpleName)
             when (error) {
-                is BackupRestoreError.ImportError.VersionMismatch -> {
+                is BackupRestoreError.VersionMismatch -> {
                     setCustomKey("imported_version", error.imported)
                     setCustomKey("current_version", error.current)
                 }
-                is BackupRestoreError.ExportError.SizeMismatch -> {
+                is BackupRestoreError.SizeMismatch -> {
                     setCustomKey("expected_size", error.expected)
                     setCustomKey("actual_size", error.actual)
                 }
