@@ -13,36 +13,36 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * Exports the app's database to the provided [destinationUri].
+ * Backs up the app's database to the provided [destinationUri].
  *
  * @throws FileNotFoundException if the database file does not exist.
  * @throws IOException if an error occurs during the copy process.
  */
-fun exportDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
+fun backUpDatabase(context: Context, database: RoomDatabase, destinationUri: Uri) {
     // Step 1: Copy to a temporary file in the local filesystem
-    val tempDatabaseExportFile = createTemporaryFile(context.cacheDir)
+    val tempDatabaseBackupFile = createTemporaryFile(context.cacheDir)
     // Merge changes from auxiliary Write-Ahead Log files into the main database file
     database.performWalCheckpoint()
 
     try {
         copyStream(
             database.getInputStream(context),
-            tempDatabaseExportFile.outputStream()
+            tempDatabaseBackupFile.outputStream()
         )
-        verifyDatabaseIntegrity(tempDatabaseExportFile)
+        verifyDatabaseIntegrity(tempDatabaseBackupFile)
 
         // Step 2: Copy the temporary file to the final destination
         val finalDestinationStream = context.contentResolver.openOutputStream(destinationUri)
             ?: throw BackupRestoreError.IO(IOException("Could not open output stream for URI: $destinationUri"))
-        copyStream(tempDatabaseExportFile.inputStream(), finalDestinationStream)
+        copyStream(tempDatabaseBackupFile.inputStream(), finalDestinationStream)
 
-        verifyExportedSize(context, destinationUri, expectedSize = tempDatabaseExportFile.length())
+        verifyBackupSize(context, destinationUri, expectedSize = tempDatabaseBackupFile.length())
     } catch (e: BackupRestoreError) {
         throw e
     } catch (e: Exception) {
         throw BackupRestoreError.IO(e)
     } finally {
-        tempDatabaseExportFile.delete()
+        tempDatabaseBackupFile.delete()
     }
 }
 
@@ -100,7 +100,7 @@ private fun RoomDatabase.getFile(context: Context): File {
     return context.getDatabasePath(name)
 }
 
-private fun createTemporaryFile(directory: File): File = File.createTempFile("database_export", ".tmp", directory)
+private fun createTemporaryFile(directory: File): File = File.createTempFile("database_backup", ".tmp", directory)
 
 private fun copyStream(source: InputStream, destination: OutputStream) {
     source.use { input ->
@@ -150,7 +150,7 @@ private fun verifyDatabaseIntegrity(databaseFile: File) {
 
 private fun openSQLiteDatabase(databaseFile: File): SQLiteDatabase = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
 
-private fun verifyExportedSize(context: Context, fileUri: Uri, expectedSize: Long) {
+private fun verifyBackupSize(context: Context, fileUri: Uri, expectedSize: Long) {
     val size = context.contentResolver.query(
         fileUri,
         arrayOf(OpenableColumns.SIZE),

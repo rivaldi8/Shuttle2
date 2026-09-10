@@ -50,11 +50,11 @@ class BackupRestoreFragment : Fragment() {
     @Inject
     lateinit var preferenceManager: GeneralPreferenceManager
 
-    private val exportDatabaseLauncher = registerForActivityResult(
+    private val backupDatabaseLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/x-sqlite3"),
     ) { uri ->
         uri?.let {
-            viewModel.exportDatabase(it)
+            viewModel.backUpDatabase(it)
         }
     }
 
@@ -70,8 +70,8 @@ class BackupRestoreFragment : Fragment() {
         viewModel.uiState
             .onEach { state ->
                 when (state) {
-                    is BackupRestoreUiState.ExportSuccess -> {
-                        Toast.makeText(requireContext(), R.string.settings_export_success, Toast.LENGTH_SHORT).show()
+                    is BackupRestoreUiState.BackupSuccess -> {
+                        Toast.makeText(requireContext(), R.string.settings_backup_success, Toast.LENGTH_SHORT).show()
                         viewModel.resetState()
                     }
                     is BackupRestoreUiState.RestoreSuccess -> {
@@ -104,9 +104,9 @@ class BackupRestoreFragment : Fragment() {
 
             AppTheme(theme = theme, accent = accent) {
                 BackupRestoreScreen(
-                    onExportClick = {
+                    onBackUpClick = {
                         val today = LocalDate.now()
-                        exportDatabaseLauncher.launch("s2-backup-$today.db")
+                        backupDatabaseLauncher.launch("s2-backup-$today.db")
                     },
                     onRestoreClick = {
                         restoreDatabaseLauncher.launch(
@@ -138,7 +138,7 @@ class BackupRestoreFragment : Fragment() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackupRestoreScreen(
-    onExportClick: () -> Unit,
+    onBackUpClick: () -> Unit,
     onRestoreClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -165,14 +165,14 @@ fun BackupRestoreScreen(
                 .padding(paddingValues),
         ) {
             ListItem(
-                headlineContent = { Text(stringResource(id = R.string.settings_menu_export_database)) },
+                headlineContent = { Text(stringResource(id = R.string.settings_menu_backup_database)) },
                 leadingContent = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_content_copy),
                         contentDescription = null,
                     )
                 },
-                modifier = Modifier.clickable { onExportClick() },
+                modifier = Modifier.clickable { onBackUpClick() },
             )
             ListItem(
                 headlineContent = { Text(stringResource(id = R.string.settings_menu_restore_database)) },

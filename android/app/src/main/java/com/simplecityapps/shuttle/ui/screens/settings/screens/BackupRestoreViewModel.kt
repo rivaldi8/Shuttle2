@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.crashlytics.crashlytics
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
+import com.simplecityapps.localmediaprovider.local.data.room.backUpDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.exportDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.importDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,12 +28,12 @@ class BackupRestoreViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<BackupRestoreUiState>(BackupRestoreUiState.Idle)
     val uiState: StateFlow<BackupRestoreUiState> = _uiState.asStateFlow()
 
-    fun exportDatabase(uri: Uri) {
+    fun backUpDatabase(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = BackupRestoreUiState.Loading
             try {
-                exportDatabase(context, database, uri)
-                _uiState.value = BackupRestoreUiState.ExportSuccess
+                backUpDatabase(context, database, uri)
+                _uiState.value = BackupRestoreUiState.BackupSuccess
             } catch (e: BackupRestoreError) {
                 reportError(e)
                 _uiState.value = BackupRestoreUiState.Error(e)

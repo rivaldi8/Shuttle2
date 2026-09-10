@@ -8,8 +8,8 @@
     <string name="settings_menu_dsp">DSP</string>
     <!-- The title of 'settings' in the bottom settings menu -->
     <string name="settings_menu_settings">Settings</string>
-    <!-- The title of 'Export database' in the bottom settings menu -->
-    <string name="settings_menu_export_database">Export Database</string>
+    <!-- The title of 'Back up database' in the bottom settings menu -->
+    <string name="settings_menu_backup_database">Back up Database</string>
     <!-- The title of 'Restore database' in the bottom settings menu -->
     <string name="settings_menu_restore_database">Restore Database</string>
     <!-- Title of the dialog shown when the user changes a setting which requires the app to be restarted.-->
@@ -58,10 +58,10 @@
     <string name="pref_category_title_changelog">Changelog</string>
     <!-- Settings: Title for backup and restore related settings -->
     <string name="pref_category_title_backup_restore">Backup &amp; Restore</string>
-    <!-- Message shown when the database has been successfully exported -->
-    <string name="settings_export_success">Database exported successfully</string>
-    <!-- Message shown when the database export failed -->
-    <string name="settings_export_failed">Export failed: %1$s</string>
+    <!-- Message shown when the database has been successfully backed up -->
+    <string name="settings_backup_success">Database backup successfully</string>
+    <!-- Message shown when the database backup failed -->
+    <string name="settings_backup_failed">Backup failed: %1$s</string>
     <!-- Message shown when the database has been successfully restored -->
     <string name="settings_restore_success">Database restored successfully. Please restart the app.</string>
     <!-- Message shown when the database restore failed -->
