@@ -9,7 +9,7 @@ import com.google.firebase.crashlytics.crashlytics
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.localmediaprovider.local.data.room.backUpDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
-import com.simplecityapps.localmediaprovider.local.data.room.importDatabase
+import com.simplecityapps.localmediaprovider.local.data.room.restoreDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +49,7 @@ class BackupRestoreViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = BackupRestoreUiState.Loading
             try {
-                importDatabase(context, uri, database)
+                restoreDatabase(context, uri, database)
                 _uiState.value = BackupRestoreUiState.RestoreSuccess
             } catch (e: BackupRestoreError) {
                 reportError(e)
@@ -72,7 +72,7 @@ class BackupRestoreViewModel @Inject constructor(
             setCustomKey("error_type", error.javaClass.simpleName)
             when (error) {
                 is BackupRestoreError.VersionMismatch -> {
-                    setCustomKey("imported_version", error.imported)
+                    setCustomKey("restored_version", error.restored)
                     setCustomKey("current_version", error.current)
                 }
                 is BackupRestoreError.SizeMismatch -> {

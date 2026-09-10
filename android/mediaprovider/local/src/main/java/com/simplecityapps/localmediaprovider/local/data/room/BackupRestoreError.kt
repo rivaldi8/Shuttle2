@@ -23,9 +23,9 @@ sealed class BackupRestoreError(
         "Exported file size mismatch: expected $expected, got $actual",
     )
     data class VersionMismatch(
-        val imported: Int,
+        val restored: Int,
         val current: Int,
     ) : BackupRestoreError(
-        "Cannot import a database from a newer app version (Imported: $imported, Current: $current)",
+        "Cannot restore a database from a newer app version (Restored: $restored, Current: $current)",
     )
 }

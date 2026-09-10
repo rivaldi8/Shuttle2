@@ -80,7 +80,7 @@ class BackupRestoreFragment : Fragment() {
                     }
                     is BackupRestoreUiState.Error -> {
                         val message = when (val error = state.error) {
-                            is BackupRestoreError.VersionMismatch -> getString(R.string.settings_restore_failed, "Newer database version (Imported: ${error.imported}, Current: ${error.current})")
+                            is BackupRestoreError.VersionMismatch -> getString(R.string.settings_restore_failed, "Newer database version (Restored: ${error.restored}, Current: ${error.current})")
                             is BackupRestoreError.IntegrityCheckFailed -> getString(R.string.settings_restore_failed, "Database integrity check failed")
                             else -> getString(R.string.settings_restore_failed, state.error.message)
                         }

@@ -51,30 +51,30 @@ fun backUpDatabase(context: Context, database: RoomDatabase, destinationUri: Uri
  *
  * @throws IOException if an error occurs during the copy process.
  */
-fun importDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
+fun restoreDatabase(context: Context, sourceUri: Uri, database: RoomDatabase) {
     val databaseDirectory = database.getDirectory(context)
         ?: throw BackupRestoreError.IO(IOException("Database directory not found"))
 
     // Step 1: Copy from the source URI to a temporary file in the local filesystem
-    val tempDatabaseImportFile = createTemporaryFile(databaseDirectory)
+    val tempDatabaseRestoreFile = createTemporaryFile(databaseDirectory)
     try {
         val sourceStream = context.contentResolver.openInputStream(sourceUri)
             ?: throw BackupRestoreError.IO(IOException("Could not open input stream for URI: $sourceUri"))
-        copyStream(sourceStream, tempDatabaseImportFile.outputStream())
+        copyStream(sourceStream, tempDatabaseRestoreFile.outputStream())
 
-        validateDatabaseForImport(tempDatabaseImportFile, database)
+        validateDatabaseForRestore(tempDatabaseRestoreFile, database)
 
         // Step 2: Replace the existing database file
         database.closeAndDelete()
 
-        if (!tempDatabaseImportFile.renameTo(database.getFile(context))) {
+        if (!tempDatabaseRestoreFile.renameTo(database.getFile(context))) {
             throw BackupRestoreError.IO(IOException("Failed to rename restored database file"))
         }
     } catch (e: BackupRestoreError) {
-        tempDatabaseImportFile.delete()
+        tempDatabaseRestoreFile.delete()
         throw e
     } catch (e: Exception) {
-        tempDatabaseImportFile.delete()
+        tempDatabaseRestoreFile.delete()
         throw BackupRestoreError.IO(e)
     }
 }
@@ -127,7 +127,7 @@ private fun RoomDatabase.closeAndDelete() {
     File("$databasePath-shm").delete()
 }
 
-private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomDatabase) {
+private fun validateDatabaseForRestore(databaseFile: File, currentDatabase: RoomDatabase) {
     openSQLiteDatabase(databaseFile).use { db ->
         if (!db.isDatabaseIntegrityOk) {
             throw BackupRestoreError.IntegrityCheckFailed()
@@ -135,7 +135,7 @@ private fun validateDatabaseForImport(databaseFile: File, currentDatabase: RoomD
 
         val currentVersion = currentDatabase.openHelper.readableDatabase.version
         if (db.version > currentVersion) {
-            throw BackupRestoreError.VersionMismatch(imported = db.version, current = currentVersion)
+            throw BackupRestoreError.VersionMismatch(restored = db.version, current = currentVersion)
         }
     }
 }
