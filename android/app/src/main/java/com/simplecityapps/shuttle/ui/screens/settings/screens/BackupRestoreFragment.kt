@@ -67,9 +67,11 @@ class BackupRestoreFragment : Fragment() {
         uri?.let { viewModel.restoreDatabase(it) }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = ComposeView(requireContext()).apply {
         viewModel.uiState
             .onEach { state ->
                 when (state) {
@@ -94,13 +96,7 @@ class BackupRestoreFragment : Fragment() {
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View = ComposeView(requireContext()).apply {
         setContent {
             val theme by preferenceManager.theme(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
             val accent by preferenceManager.accent(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
