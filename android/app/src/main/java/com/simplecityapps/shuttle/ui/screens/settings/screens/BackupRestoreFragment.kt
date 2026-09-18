@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +36,8 @@ import androidx.navigation.fragment.findNavController
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
+import com.simplecityapps.shuttle.ui.common.components.CircularLoadingState
+import com.simplecityapps.shuttle.ui.common.components.LoadingStatusIndicator
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.launchIn
@@ -145,6 +146,9 @@ fun BackupRestoreScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isOperationInProgress = uiState is BackupRestoreUiState.BackupInProgress ||
+        uiState is BackupRestoreUiState.RestoreInProgress
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -177,7 +181,8 @@ fun BackupRestoreScreen(
                             contentDescription = null,
                         )
                     },
-                    modifier = Modifier.clickable(enabled = uiState !is BackupRestoreUiState.Loading) { onBackUpClick() },
+                    modifier = Modifier
+                        .clickable(enabled = !isOperationInProgress) { onBackUpClick() },
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(id = R.string.settings_menu_restore_database)) },
@@ -187,12 +192,19 @@ fun BackupRestoreScreen(
                             contentDescription = null,
                         )
                     },
-                    modifier = Modifier.clickable(enabled = uiState !is BackupRestoreUiState.Loading) { onRestoreClick() },
+                    modifier = Modifier
+                        .clickable(enabled = !isOperationInProgress) { onRestoreClick() },
                 )
             }
 
-            if (uiState is BackupRestoreUiState.Loading) {
-                CircularProgressIndicator(
+            if (isOperationInProgress) {
+                val messageKey = if (uiState is BackupRestoreUiState.BackupInProgress) {
+                    R.string.settings_menu_backup_database
+                } else {
+                    R.string.settings_menu_restore_database
+                }
+                LoadingStatusIndicator(
+                    state = CircularLoadingState.Loading(stringResource(id = messageKey)),
                     modifier = Modifier.align(Alignment.Center)
                 )
             }

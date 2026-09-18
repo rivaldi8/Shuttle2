@@ -13,11 +13,13 @@ import com.simplecityapps.localmediaprovider.local.data.room.restoreDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
@@ -30,7 +32,8 @@ class BackupRestoreViewModel @Inject constructor(
 
     fun backUpDatabase(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = BackupRestoreUiState.Loading
+            _uiState.value = BackupRestoreUiState.BackupInProgress
+            delay(2000L.milliseconds)
             try {
                 backUpDatabase(context, database, uri)
                 _uiState.value = BackupRestoreUiState.BackupSuccess
@@ -47,7 +50,7 @@ class BackupRestoreViewModel @Inject constructor(
 
     fun restoreDatabase(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = BackupRestoreUiState.Loading
+            _uiState.value = BackupRestoreUiState.RestoreInProgress
             try {
                 restoreDatabase(context, uri, database)
                 _uiState.value = BackupRestoreUiState.RestoreSuccess
