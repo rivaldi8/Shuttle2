@@ -146,8 +146,7 @@ fun BackupRestoreScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isOperationInProgress = uiState is BackupRestoreUiState.BackupInProgress ||
-        uiState is BackupRestoreUiState.RestoreInProgress
+    val isOperationInProgress = uiState is BackupRestoreUiState.InProgress
 
     Scaffold(
         modifier = modifier,
@@ -182,7 +181,8 @@ fun BackupRestoreScreen(
                         )
                     },
                     modifier = Modifier
-                        .clickable(enabled = !isOperationInProgress) { onBackUpClick() },
+                        .clickable(enabled = !isOperationInProgress)
+                        { onBackUpClick() },
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(id = R.string.settings_menu_restore_database)) },
@@ -193,7 +193,8 @@ fun BackupRestoreScreen(
                         )
                     },
                     modifier = Modifier
-                        .clickable(enabled = !isOperationInProgress) { onRestoreClick() },
+                        .clickable(enabled = !isOperationInProgress)
+                        { onRestoreClick() },
                 )
             }
 
