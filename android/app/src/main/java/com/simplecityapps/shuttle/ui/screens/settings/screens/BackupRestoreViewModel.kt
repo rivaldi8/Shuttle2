@@ -4,22 +4,20 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.crashlytics.crashlytics
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.localmediaprovider.local.data.room.backUpDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.database.MediaDatabase
 import com.simplecityapps.localmediaprovider.local.data.room.restoreDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
@@ -38,11 +36,9 @@ class BackupRestoreViewModel @Inject constructor(
                 backUpDatabase(context, database, uri)
                 _uiState.value = BackupRestoreUiState.BackupSuccess
             } catch (e: BackupRestoreError) {
-                reportError(e)
                 _uiState.value = BackupRestoreUiState.Error(e)
             } catch (e: Exception) {
                 val wrappedError = BackupRestoreError.IO(e)
-                reportError(wrappedError)
                 _uiState.value = BackupRestoreUiState.Error(wrappedError)
             }
         }
@@ -55,11 +51,9 @@ class BackupRestoreViewModel @Inject constructor(
                 restoreDatabase(context, uri, database)
                 _uiState.value = BackupRestoreUiState.RestoreSuccess
             } catch (e: BackupRestoreError) {
-                reportError(e)
                 _uiState.value = BackupRestoreUiState.Error(e)
             } catch (e: Exception) {
                 val wrappedError = BackupRestoreError.IO(e)
-                reportError(wrappedError)
                 _uiState.value = BackupRestoreUiState.Error(wrappedError)
             }
         }
@@ -67,23 +61,5 @@ class BackupRestoreViewModel @Inject constructor(
 
     fun resetState() {
         _uiState.value = BackupRestoreUiState.Idle
-    }
-
-    private fun reportError(error: BackupRestoreError) {
-        Firebase.crashlytics.apply {
-            recordException(error)
-            setCustomKey("error_type", error.javaClass.simpleName)
-            when (error) {
-                is BackupRestoreError.VersionMismatch -> {
-                    setCustomKey("restored_version", error.restored)
-                    setCustomKey("current_version", error.current)
-                }
-                is BackupRestoreError.SizeMismatch -> {
-                    setCustomKey("expected_size", error.expected)
-                    setCustomKey("actual_size", error.actual)
-                }
-                else -> {}
-            }
-        }
     }
 }
