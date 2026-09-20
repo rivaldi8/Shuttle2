@@ -11,8 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.shuttle.R
@@ -20,8 +22,7 @@ import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
 import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.system.exitProcess
@@ -61,30 +62,36 @@ class BackupRestoreFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.uiState
-            .onEach { state ->
-                when (state) {
-                    is BackupRestoreUiState.BackupSuccess -> {
-                        Toast.makeText(requireContext(), R.string.settings_backup_success, Toast.LENGTH_SHORT).show()
-                        viewModel.resetState()
-                    }
-                    is BackupRestoreUiState.RestoreSuccess -> {
-                        Toast.makeText(requireContext(), R.string.settings_restore_success, Toast.LENGTH_LONG).show()
-                        restartApp()
-                    }
-                    is BackupRestoreUiState.Error -> {
-                        val message = when (val error = state.error) {
-                            is BackupRestoreError.VersionMismatch -> getString(R.string.settings_restore_failed, "Newer database version (Restored: ${error.restored}, Current: ${error.current})")
-                            is BackupRestoreError.IntegrityCheckFailed -> getString(R.string.settings_restore_failed, "Database integrity check failed")
-                            else -> getString(R.string.settings_restore_failed, state.error.message)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState
+                    .collect { state ->
+                        when (state) {
+                            is BackupRestoreUiState.BackupSuccess -> {
+                                Toast.makeText(requireContext(), R.string.settings_backup_success, Toast.LENGTH_SHORT).show()
+                                viewModel.resetState()
+                            }
+
+                            is BackupRestoreUiState.RestoreSuccess -> {
+                                Toast.makeText(requireContext(), R.string.settings_restore_success, Toast.LENGTH_LONG).show()
+                                restartApp()
+                            }
+
+                            is BackupRestoreUiState.Error -> {
+                                val message = when (val error = state.error) {
+                                    is BackupRestoreError.VersionMismatch -> getString(R.string.settings_restore_failed, "Newer database version (Restored: ${error.restored}, Current: ${error.current})")
+                                    is BackupRestoreError.IntegrityCheckFailed -> getString(R.string.settings_restore_failed, "Database integrity check failed")
+                                    else -> getString(R.string.settings_restore_failed, state.error.message)
+                                }
+                                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                                viewModel.resetState()
+                            }
+
+                            else -> {}
                         }
-                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-                        viewModel.resetState()
                     }
-                    else -> {}
-                }
             }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+        }
 
         composeView.setContent {
             val theme by preferenceManager.theme(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
