@@ -28,7 +28,7 @@ import javax.inject.Inject
 import kotlin.system.exitProcess
 
 @AndroidEntryPoint
-class BackupRestoreFragment : Fragment() {
+class BackupRestorePreferenceFragment : Fragment() {
 
     private val viewModel: BackupRestoreViewModel by viewModels()
 
