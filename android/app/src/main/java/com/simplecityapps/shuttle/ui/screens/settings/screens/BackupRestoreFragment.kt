@@ -17,13 +17,14 @@ import androidx.navigation.fragment.findNavController
 import com.simplecityapps.localmediaprovider.local.data.room.BackupRestoreError
 import com.simplecityapps.shuttle.R
 import com.simplecityapps.shuttle.persistence.GeneralPreferenceManager
+import com.simplecityapps.shuttle.ui.common.autoCleared
 import com.simplecityapps.shuttle.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.system.exitProcess
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class BackupRestoreFragment : Fragment() {
@@ -32,6 +33,8 @@ class BackupRestoreFragment : Fragment() {
 
     @Inject
     lateinit var preferenceManager: GeneralPreferenceManager
+
+    private var composeView: ComposeView by autoCleared()
 
     private val backupDatabaseLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/x-sqlite3"),
@@ -51,7 +54,13 @@ class BackupRestoreFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View = ComposeView(requireContext()).apply {
+    ): View = ComposeView(requireContext()).also {
+        composeView = it
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         viewModel.uiState
             .onEach { state ->
                 when (state) {
@@ -77,7 +86,7 @@ class BackupRestoreFragment : Fragment() {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        setContent {
+        composeView.setContent {
             val theme by preferenceManager.theme(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
             val accent by preferenceManager.accent(viewLifecycleOwner.lifecycleScope).collectAsStateWithLifecycle()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
